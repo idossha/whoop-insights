@@ -1,0 +1,109 @@
+services:
+  dashboard:
+    build: .
+    container_name: whoop-dashboard
+    ports:
+      - "8501:8501"
+    volumes:
+      - whoop-data:/app/data
+      - ./tokens.json:/app/tokens.json:ro
+    environment:
+      - WHOOP_CLIENT_ID=${WHOOP_CLIENT_ID}
+      - WHOOP_CLIENT_SECRET=${WHOOP_CLIENT_SECRET}
+      - WHOOP_REDIRECT_URI=${WHOOP_REDIRECT_URI:-http://localhost:8080/callback}
+      - WHOOP_DB_PATH=/app/data/whoop.db
+      - WHOOP_TOKENS_FILE=/app/tokens.json
+      - SYNC_HOUR=${SYNC_HOUR:-6}
+      - SYNC_MINUTE=${SYNC_MINUTE:-0}
+      - TZ=${TZ:-UTC}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: whoop-watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=86400
+      - WATCHTOWER_SCHEDULE=0 0 4 * * *
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: whoop-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: whoop-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=${GRAFANA_URL:-http://localhost:3000}
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  caddy:
+    image: caddy:latest
+    container_name: whoop-caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  whoop-data:
+  prometheus-data:
+  grafana-data:
+  caddy-data:
+  caddy-config:

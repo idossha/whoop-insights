@@ -1,0 +1,34 @@
+# Replace YOUR_DOMAIN with your actual domain
+# For local testing, use http:// instead of https://
+
+# Dashboard
+YOUR_DOMAIN.com {
+    reverse_proxy dashboard:8501
+    encode gzip
+    header {
+        Strict-Transport-Security "max-age=31536000; include-subdomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        X-XSS-Protection "1; mode=block"
+    }
+}
+
+# Grafana
+grafana.YOUR_DOMAIN.com {
+    reverse_proxy grafana:3000
+    encode gzip
+}
+
+# Prometheus (optional - for internal access only)
+# prometheus.YOUR_DOMAIN.com {
+#     reverse_proxy prometheus:9090
+#     basicauth {
+#         admin $2a$14$HASHED_PASSWORD
+#     }
+# }
+
+# For local development without domain:
+# :80 {
+#     reverse_proxy /whoop/* dashboard:8501
+#     reverse_proxy /grafana/* grafana:3000
+# }
