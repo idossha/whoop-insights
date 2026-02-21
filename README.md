@@ -2,8 +2,25 @@
 
 Personal fitness dashboard with automated sync and MLR models for Recovery and HRV prediction.
 
-
 See [SETUP.md](SETUP.md) for detailed instructions on how to deploy.
+
+### Correlation Analysis
+
+![Correlation Matrix](docs/correlation_matrix.png)
+
+The correlation matrix shows relationships between key metrics - helping identify which factors most impact recovery and HRV.
+
+### Model Coefficients
+
+![Coefficients](docs/coefficients.png)
+
+Positive coefficients increase the predicted value, negative coefficients decrease it. The magnitude shows the strength of each factor's influence.
+
+### Prediction Accuracy
+
+![Actual vs Predicted](docs/actual_vs_predicted.png)
+
+The closer points align to the diagonal line, the more accurate the predictions. 
 
 ## Features
 
@@ -31,24 +48,6 @@ See [SETUP.md](SETUP.md) for detailed instructions on how to deploy.
 - **Insights** - Correlation analysis
 - **MLR Recovery** - Predict recovery
 - **MLR HRV** - Predict HRV
-
-### Correlation Analysis
-
-![Correlation Matrix](docs/correlation_matrix.png)
-
-The correlation matrix shows relationships between key metrics - helping identify which factors most impact recovery and HRV.
-
-### Model Coefficients
-
-![Coefficients](docs/coefficients.png)
-
-Positive coefficients increase the predicted value, negative coefficients decrease it. The magnitude shows the strength of each factor's influence.
-
-### Prediction Accuracy
-
-![Actual vs Predicted](docs/actual_vs_predicted.png)
-
-The closer points align to the diagonal line, the more accurate the predictions. 
 
 ## Data Storage
 
