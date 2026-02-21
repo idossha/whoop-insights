@@ -320,15 +320,3 @@ docker exec whoop-dashboard python main.py stats
 
 Edit ports in `docker-compose.yml` if 8501 or 8080 are in use.
 
----
-
-## Quick Reference
-
-```bash
-git clone <repo> && cd whoop_sync
-cp .env.example .env && nano .env
-make docker-up
-make docker-auth
-make docker-sync
-# Open http://localhost:8501
-```
