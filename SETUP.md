@@ -91,9 +91,6 @@ SYNC_MINUTE=0
 
 # Your timezone
 TZ=America/New_York
-
-# Grafana admin password
-GRAFANA_PASSWORD=admin
 ```
 
 Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
@@ -238,10 +235,8 @@ Open your browser and navigate to:
 | Service | URL | Credentials |
 |---------|-----|-------------|
 | **Dashboard** | http://localhost:8501 | None |
-| **Grafana** | http://localhost:3000 | admin / admin |
-| **Prometheus** | http://localhost:9090 | None |
 
-The main dashboard (Streamlit) displays your Whoop data with charts and metrics.
+The Streamlit dashboard displays your Whoop data with charts and metrics.
 
 ---
 
@@ -367,7 +362,7 @@ make docker-logs
 
 ### Port conflicts
 
-Edit ports in `docker-compose.yml` if 8501, 8080, 3000, or 9090 are in use.
+Edit ports in `docker-compose.yml` if 8501 or 8080 are in use.
 
 ### Tailscale Funnel not working
 
