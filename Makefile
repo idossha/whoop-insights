@@ -1,54 +1,29 @@
-.PHONY: help install auth sync sync-full dashboard docker-build docker-pull docker-up docker-down docker-logs docker-sync docker-auth docker-reauth docker-status docker-shell clean setup
+.PHONY: help install auth sync sync-full dashboard docker-build docker-pull docker-up docker-down docker-logs docker-sync docker-auth docker-reauth docker-status docker-shell docker-clean clean setup venv-setup venv-auth venv-sync venv-sync-full venv-dashboard venv-status venv-reauth
 
 help:
 	@echo "Whoop Sync - Commands:"
 	@echo ""
-	@echo "Docker Operations:"
+	@echo "=== Docker (64-bit OS only) ==="
 	@echo "  make docker-pull   - Pull latest image from Docker Hub"
-	@echo "  make docker-build  - Build Docker image locally"
 	@echo "  make docker-up     - Start all Docker services"
 	@echo "  make docker-down   - Stop all Docker services"
-	@echo "  make docker-logs   - View Docker logs (follow mode)"
-	@echo "  make docker-shell  - Open shell in dashboard container"
-	@echo ""
-	@echo "Authentication (in container):"
+	@echo "  make docker-logs   - View dashboard logs"
+	@echo "  make docker-shell  - Open shell in container"
 	@echo "  make docker-auth   - Start authentication flow"
-	@echo "  make docker-reauth - Re-authenticate (clear old tokens)"
-	@echo "  make docker-status - Check authentication status"
-	@echo ""
-	@echo "Sync (in container):"
 	@echo "  make docker-sync   - Sync data once"
-	@echo "  make docker-sync-full - Full historical sync"
 	@echo ""
-	@echo "Local Development:"
-	@echo "  make install       - Install Python deps locally"
-	@echo "  make auth          - Authenticate with Whoop (local)"
-	@echo "  make sync          - Sync data (local)"
-	@echo "  make sync-full     - Full historical sync (local)"
-	@echo "  make dashboard     - Run Streamlit dashboard (local)"
+	@echo "=== Local/venv (32-bit or 64-bit) ==="
+	@echo "  make venv-setup    - Create virtual environment"
+	@echo "  make venv-dashboard- Run dashboard locally"
+	@echo "  make venv-auth     - Authenticate locally"
+	@echo "  make venv-sync     - Sync data locally"
 	@echo ""
-	@echo "Maintenance:"
+	@echo "=== Development ==="
+	@echo "  make docker-build  - Build Docker image locally"
+	@echo "  make install       - Install Python deps in venv"
 	@echo "  make clean         - Remove generated files"
-	@echo "  make docker-clean  - Remove Docker volumes (WARNING: deletes data)"
 
-setup:
-	./scripts/setup.sh
-
-install:
-	pip install -r requirements.txt
-
-auth:
-	python main.py auth
-
-sync:
-	python main.py sync
-
-sync-full:
-	python main.py sync --full
-
-dashboard:
-	streamlit run dashboard/dashboard.py
-
+# Docker commands (64-bit OS only)
 docker-pull:
 	docker pull idossha/whoop-sync:latest
 
@@ -84,6 +59,41 @@ docker-sync-full:
 
 docker-clean:
 	docker compose down -v
+
+# Local/venv commands (32-bit or 64-bit)
+venv-setup:
+	python3 -m venv venv
+	./venv/bin/pip install --upgrade pip
+	./venv/bin/pip install -r requirements.txt
+
+install:
+	./venv/bin/pip install -r requirements.txt
+
+auth:
+	./venv/bin/python main.py auth
+
+reauth:
+	./venv/bin/python main.py reauth
+
+status:
+	./venv/bin/python main.py status
+
+sync:
+	./venv/bin/python main.py sync
+
+sync-full:
+	./venv/bin/python main.py sync --full
+
+dashboard:
+	./venv/bin/streamlit run dashboard/dashboard.py
+
+# Aliases for venv
+venv-auth: auth
+venv-reauth: reauth
+venv-status: status
+venv-sync: sync
+venv-sync-full: sync-full
+venv-dashboard: dashboard
 
 clean:
 	rm -rf __pycache__ src/whoop_sync/__pycache__ *.pyc

@@ -1,428 +1,303 @@
 # Whoop Dashboard Setup Guide
 
-This guide walks you through setting up the Whoop Dashboard from scratch. All operations run inside Docker containers - no local Python setup required.
+This guide covers three deployment options. Choose based on your system:
+
+| Option | Best For | Requirements |
+|--------|----------|--------------|
+| **Option 1: Docker (Full)** | 64-bit OS | 64-bit Raspberry Pi OS, macOS, Linux |
+| **Option 2: Upgrade to 64-bit** | 32-bit users wanting Docker | Raspberry Pi 3B+ or newer |
+| **Option 3: Local/venv** | 32-bit systems | Any system with Python 3.11+ |
 
 ---
 
-## Table of Contents
+## Check Your System
 
-1. [Prerequisites](#1-prerequisites)
-2. [Clone the Repository](#2-clone-the-repository)
-3. [Get Whoop API Credentials](#3-get-whoop-api-credentials)
-4. [Configure Environment](#4-configure-environment)
-5. [Pull and Start Services](#5-pull-and-start-services)
-6. [Authenticate with Whoop](#6-authenticate-with-whoop)
-7. [Sync Your Data](#7-sync-your-data)
-8. [Access the Dashboard](#8-access-the-dashboard)
-9. [Share Publicly with Tailscale](#9-share-publicly-with-tailscale)
-10. [Optional: Raspberry Pi Deployment](#10-optional-raspberry-pi-deployment)
-11. [Troubleshooting](#11-troubleshooting)
-12. [Common Commands](#12-common-commands)
-
----
-
-## 1. Prerequisites
-
-Before starting, ensure you have:
-
-- **Docker & Docker Compose** - [Install Docker](https://docs.docker.com/get-docker/)
-- **A Whoop account** with data to sync
-- **Git** for cloning the repository
-- **Tailscale** (optional, for public sharing) - [Install Tailscale](https://tailscale.com/download)
-
-### Verify Docker is installed:
+Run this command to check if you're on 64-bit or 32-bit:
 
 ```bash
-docker --version
-docker compose version
+uname -m
 ```
+
+- `aarch64` or `x86_64` = **64-bit** → Use **Option 1**
+- `armv7l` or `armv6l` = **32-bit** → Use **Option 2** or **Option 3**
 
 ---
 
-## 2. Clone the Repository
+## Option 1: Docker Deployment (64-bit OS)
+
+Best for: macOS, Linux desktops, Raspberry Pi with 64-bit OS.
+
+### Prerequisites
+
+- Docker & Docker Compose - [Install Docker](https://docs.docker.com/get-docker/)
+- A Whoop account with data
+- Git
+
+### Steps
+
+**1. Clone and configure:**
 
 ```bash
 git clone <your-repo-url>
 cd whoop_sync
+cp .env.example .env
+nano .env  # Add your Whoop API credentials
 ```
 
----
-
-## 3. Get Whoop API Credentials
+**2. Get Whoop API credentials:**
 
 1. Go to [Whoop Developer Dashboard](https://developer-dashboard.whoop.com/)
-2. Sign in with your Whoop account
-3. Click **"Create Application"**
-4. Fill in the application details:
-   - **Name**: `Whoop Dashboard` (or any name you prefer)
-   - **Redirect URI**: `http://localhost:8080/callback`
-5. Click **"Create"**
-6. Copy your **Client ID** and **Client Secret** (save these - you'll need them next)
+2. Create an application with redirect URI: `http://localhost:8080/callback`
+3. Copy Client ID and Secret to your `.env` file
 
-> **Important**: The redirect URI must match exactly: `http://localhost:8080/callback`
-
----
-
-## 4. Configure Environment
-
-Create your `.env` file from the template:
+**3. Start services:**
 
 ```bash
-cp .env.example .env
+make docker-up          # Pulls image and starts
+make docker-auth        # Authenticate (visit URL shown)
+make docker-sync        # Initial data sync
 ```
 
-Edit `.env` with your credentials:
+**4. Access dashboard:**
+
+Open http://localhost:8501
+
+### Common Commands
 
 ```bash
-nano .env
-```
-
-Update these values:
-
-```env
-# Whoop API (required - from step 3)
-WHOOP_CLIENT_ID=your_actual_client_id_here
-WHOOP_CLIENT_SECRET=your_actual_client_secret_here
-WHOOP_REDIRECT_URI=http://localhost:8080/callback
-
-# Sync schedule (daily sync time)
-SYNC_HOUR=6
-SYNC_MINUTE=0
-
-# Your timezone
-TZ=America/New_York
-```
-
-Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
-
----
-
-## 5. Pull and Start Services
-
-Start all services (automatically pulls `idossha/whoop-sync:latest` from Docker Hub):
-
-```bash
-make docker-up
-```
-
-Or manually:
-
-```bash
-docker compose up -d
-```
-
-Wait for the container to start (~30 seconds). You'll see:
-
-```
-NOT AUTHENTICATED
-==================
-Run the following command to authenticate:
-  docker exec whoop-dashboard python main.py auth
-```
-
-### Updating to Latest Version
-
-```bash
-make docker-pull    # Pull latest image
-make docker-down    # Stop services
-make docker-up      # Restart with new image
-```
-
-### Building Locally (Optional)
-
-If you want to modify the code and build locally:
-
-```bash
-make docker-build
+make docker-up          # Start services
+make docker-down        # Stop services
+make docker-pull        # Update to latest image
+make docker-logs        # View logs
+make docker-auth        # Re-authenticate
+make docker-sync        # Sync data
 ```
 
 ---
 
-## 6. Authenticate with Whoop
+## Option 2: Upgrade to 64-bit Raspberry Pi OS
 
-Authenticate to connect your Whoop account:
+If you have a 32-bit OS and want to use Docker, upgrade to 64-bit.
 
-```bash
-make docker-auth
-```
+### Compatible Raspberry Pi Models
 
-Or:
+| Model | 64-bit Support |
+|-------|----------------|
+| Raspberry Pi 5 | Yes |
+| Raspberry Pi 4 | Yes |
+| Raspberry Pi 3B+ | Yes |
+| Raspberry Pi 3B | Yes |
+| Raspberry Pi 3A+ | Yes |
+| Raspberry Pi Zero 2 W | Yes |
+| Raspberry Pi 2 | No (32-bit only) |
+| Raspberry Pi Zero/Zero W | No (32-bit only) |
 
-```bash
-docker exec -it whoop-dashboard python main.py auth
-```
+### Upgrade Steps
 
-You'll see output like:
-
-```
-======================================================================
-AUTHENTICATION REQUIRED
-======================================================================
-
-Visit this URL in your browser to authenticate:
-
-https://api.prod.whoop.com/oauth/oauth2/auth?response_type=code&client_id=...
-
-======================================================================
-
-Waiting for authorization (timeout: 300s)...
-```
-
-1. Copy the URL shown
-2. Open it in your browser
-3. Log in to Whoop and authorize the application
-4. You'll be redirected to `localhost:8080/callback` with "Success!" message
-5. Return to your terminal - you should see "Authentication successful!"
-
-### Check Authentication Status
+**1. Backup your data:**
 
 ```bash
-make docker-status
+# On your Pi, backup these files:
+cp ~/.env ~/env-backup
+cp -r ~/whoop_sync ~/whoop_sync-backup
 ```
 
-Output:
+**2. Download 64-bit Raspberry Pi OS:**
 
-```
-Authentication Status:
-  Tokens file: /app/data/tokens.json
-  Has access token: Yes
-  Has refresh token: Yes
-  Token expires: 2026-02-21 12:00:00
-  Token expired: No
-  Token refresh: SUCCESS
-```
+Visit: https://www.raspberrypi.com/software/operating-systems/
 
-### Re-Authenticate (if needed)
+Look for **"Raspberry Pi OS with Desktop"** and select **"64-bit"** version.
 
-If your tokens become invalid or revoked:
+**3. Flash to SD card:**
+
+Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
 
 ```bash
-make docker-reauth
+# On macOS/Linux
+rpi-imager
 ```
 
----
-
-## 7. Sync Your Data
-
-Run your first data sync:
-
+Or with dd:
 ```bash
-make docker-sync
+# Replace /dev/disk2 with your SD card
+sudo dd if=raspberry-pi-os-64bit.img of=/dev/disk2 bs=4M status=progress
 ```
 
-This will sync:
-- Profile information
-- Body measurements
-- Cycles (daily strain/recovery data)
-- Recoveries
-- Sleeps
-- Workouts
+**4. Boot and setup:**
 
-The first sync may take a few minutes depending on your data history.
-
-### Full Historical Sync (Optional)
-
-To sync all historical data:
-
-```bash
-make docker-sync-full
-```
-
-### Sync Specific Date Range
-
-```bash
-docker exec whoop-dashboard python main.py sync --start 2024-01-01 --end 2024-12-31
-```
-
-### Check Database Stats
-
-```bash
-docker exec whoop-dashboard python main.py stats
-```
-
----
-
-## 8. Access the Dashboard
-
-Open your browser and navigate to:
-
-| Service | URL | Credentials |
-|---------|-----|-------------|
-| **Dashboard** | http://localhost:8501 | None |
-
-The Streamlit dashboard displays your Whoop data with charts and metrics.
-
----
-
-## 9. Share Publicly with Tailscale
-
-Share your dashboard with anyone - they don't need Tailscale installed.
-
-### Prerequisites
-
-1. Install Tailscale: https://tailscale.com/download
-2. Sign in to Tailscale
-3. Verify it's running: `tailscale status`
-
-### Enable Public Access
-
-```bash
-# Enable Tailscale Funnel
-tailscale funnel --bg --https=443 http://localhost:8501
-```
-
-You'll see output like:
-
-```
-Available on the internet:
-
-https://idos-macbook-pro.tail9eb77e.ts.net/
-|-- proxy http://localhost:8501
-
-Funnel started and running in the background.
-```
-
-### Share the URL
-
-Share the URL shown (e.g., `https://idos-macbook-pro.tail9eb77e.ts.net/`) with anyone. They can access your dashboard without Tailscale.
-
-### Stop Sharing
-
-```bash
-tailscale funnel --https=443 off
-```
-
----
-
-## 10. Optional: Raspberry Pi Deployment
-
-Deploy to a Raspberry Pi for always-on monitoring:
-
-### On the Raspberry Pi:
-
-1. **Install Docker:**
+1. Insert SD card and power on
+2. Complete initial setup (timezone, WiFi, etc.)
+3. Install Docker:
    ```bash
    curl -fsSL https://get.docker.com | sh
    sudo usermod -aG docker $USER
-   ```
-   Log out and back in for group changes to take effect.
-
-2. **Install Tailscale (recommended):**
-   ```bash
-   curl -fsSL https://tailscale.com/install.sh | sh
-   sudo tailscale up
+   # Log out and back in
    ```
 
-3. **Clone and setup:**
-   ```bash
-   git clone <your-repo-url>
-   cd whoop_sync
-   cp .env.example .env
-   nano .env  # Add your credentials
-   make docker-up        # Pulls image from Docker Hub
-   make docker-auth      # Complete authentication
-   make docker-sync      # Initial sync
-   ```
+**5. Restore your setup:**
 
-4. **Enable public access (optional):**
-   ```bash
-   tailscale funnel --bg --https=443 http://localhost:8501
-   ```
+```bash
+git clone <your-repo-url>
+cd whoop_sync
+cp ~/env-backup .env
+make docker-up
+make docker-auth
+make docker-sync
+```
+
+Then proceed with **Option 1** above.
 
 ---
 
-## 11. Troubleshooting
+## Option 3: Local/venv Deployment (32-bit Systems)
 
-### Authentication fails
+Run the app directly with Python. Works on any system with Python 3.11+.
 
-1. Ensure redirect URI in Whoop Developer Dashboard matches exactly: `http://localhost:8080/callback`
-2. Check that `WHOOP_CLIENT_ID` and `WHOOP_CLIENT_SECRET` are correct in `.env`
-3. Try re-authenticating:
-   ```bash
-   make docker-reauth
-   ```
+### Prerequisites
 
-### Token refresh fails
+- Python 3.11 or higher
+- pip and venv
+- A Whoop account with data
 
-The Whoop API requires `scope` parameter during token refresh. This is handled automatically. If you see refresh errors:
+### Steps
 
-1. Check auth status:
-   ```bash
-   make docker-status
-   ```
-2. If refresh test fails, re-authenticate:
-   ```bash
-   make docker-reauth
-   ```
-
-### No data appears
-
-1. Run manual sync:
-   ```bash
-   make docker-sync
-   ```
-
-2. Check database stats:
-   ```bash
-   docker exec whoop-dashboard python main.py stats
-   ```
-
-### Container won't start
+**1. Clone and configure:**
 
 ```bash
-make docker-logs
+git clone <your-repo-url>
+cd whoop_sync
+cp .env.example .env
+nano .env  # Add your Whoop API credentials
 ```
 
-### Port conflicts
+**2. Get Whoop API credentials:**
 
-Edit ports in `docker-compose.yml` if 8501 or 8080 are in use.
+Same as Option 1 - see [Whoop Developer Dashboard](https://developer-dashboard.whoop.com/)
 
-### Tailscale Funnel not working
+**3. Create virtual environment:**
 
-1. Ensure Tailscale is running: `tailscale status`
-2. Enable Funnel: visit the URL shown when running `tailscale funnel`
-3. Check if port 443 is available
+```bash
+make venv-setup
+```
+
+This creates a `venv/` directory and installs all dependencies.
+
+**4. Authenticate:**
+
+```bash
+make auth
+# Or: ./venv/bin/python main.py auth
+```
+
+Visit the URL shown in your browser.
+
+**5. Sync data:**
+
+```bash
+make sync
+```
+
+**6. Run dashboard:**
+
+```bash
+make dashboard
+```
+
+Open http://localhost:8501
+
+### Common Commands
+
+```bash
+make venv-setup     # Create venv and install deps
+make auth           # Authenticate
+make sync           # Sync data
+make dashboard      # Run dashboard
+make status         # Check auth status
+```
+
+### Run as Systemd Service (Auto-start on boot)
+
+**1. Copy the service file:**
+
+```bash
+sudo cp whoop-sync.service /etc/systemd/system/
+```
+
+**2. Edit the paths if needed:**
+
+```bash
+sudo nano /etc/systemd/system/whoop-sync.service
+```
+
+Update `User`, `WorkingDirectory`, and paths to match your setup.
+
+**3. Enable and start:**
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable whoop-sync
+sudo systemctl start whoop-sync
+```
+
+**4. Check status:**
+
+```bash
+sudo systemctl status whoop-sync
+```
+
+### Set Up Daily Sync Cron Job
+
+```bash
+# Edit crontab
+crontab -e
+
+# Add this line (sync at 6 AM daily)
+0 6 * * * cd /home/pi/whoop_sync && ./venv/bin/python main.py sync >> /var/log/whoop-sync.log 2>&1
+```
 
 ---
 
-## 12. Common Commands
+## Optional: HTTPS with Caddy (All Options)
 
-### Docker Management
+For HTTPS access, you can run Caddy as a reverse proxy.
+
+### For Docker (Option 1)
+
+Caddy is included in `docker-compose.yml`. Just configure your domain:
 
 ```bash
-make docker-pull       # Pull latest image from Docker Hub
-make docker-up         # Start all services
-make docker-down       # Stop all services
-make docker-build      # Build image locally (for development)
-make docker-logs       # View dashboard logs
-make docker-shell      # Open shell in container
-make docker-clean      # Remove containers and volumes (WARNING: deletes data)
+nano Caddyfile
+# Replace YOUR_DOMAIN.com with your actual domain
 ```
 
-### Authentication
+### For Local/venv (Option 3)
+
+Run Caddy separately:
 
 ```bash
-make docker-status     # Check auth status
-make docker-auth       # Start authentication flow
-make docker-reauth     # Re-authenticate (clear old tokens)
+# Using Docker
+docker compose -f docker-compose.lite.yml up -d
+
+# Or install Caddy directly
+sudo apt install caddy
 ```
 
-### Data Sync
+---
+
+## Sharing Publicly with Tailscale
+
+Share your dashboard with anyone (no Tailscale required for them):
 
 ```bash
-make docker-sync       # Incremental sync
-make docker-sync-full  # Full historical sync
-docker exec whoop-dashboard python main.py stats  # Database stats
-```
+# Install Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
 
-### Tailscale / Public Sharing
-
-```bash
 # Enable public access
 tailscale funnel --bg --https=443 http://localhost:8501
 
-# Check status
-tailscale funnel status
+# Your URL will be:
+# https://<your-machine-name>.tail<id>.ts.net/
 
 # Stop sharing
 tailscale funnel --https=443 off
@@ -430,50 +305,102 @@ tailscale funnel --https=443 off
 
 ---
 
-## Quick Reference
+## Troubleshooting
 
+### Docker: "no matching manifest for linux/arm/v8"
+
+Your Pi is running 32-bit OS. Use **Option 2** (upgrade to 64-bit) or **Option 3** (local/venv).
+
+### Docker: Container keeps restarting
+
+Check logs:
 ```bash
-# Complete setup from scratch
-git clone <repo> && cd whoop_sync
-cp .env.example .env && nano .env
-make docker-up          # Pulls from Docker Hub
-make docker-auth        # Visit URL shown
-make docker-sync
+docker logs whoop-dashboard
+```
 
-# Access dashboard
-open http://localhost:8501
+If empty logs on 32-bit Pi → use Option 3 instead.
 
-# Share publicly
-tailscale funnel --bg --https=443 http://localhost:8501
+### pip install fails on 32-bit
+
+Install build dependencies:
+```bash
+sudo apt install python3-dev build-essential
+make venv-setup
+```
+
+### Authentication fails
+
+1. Ensure redirect URI matches exactly: `http://localhost:8080/callback`
+2. Check credentials in `.env`
+3. Re-authenticate: `make auth` or `make docker-auth`
+
+### Port 8501 already in use
+
+Kill the process:
+```bash
+lsof -i :8501
+kill <PID>
+```
+
+Or change the port in the dashboard command:
+```bash
+./venv/bin/streamlit run dashboard/dashboard.py --server.port 8502
 ```
 
 ---
 
-## Architecture
+## Quick Reference
+
+### Option 1 (Docker, 64-bit)
+
+```bash
+git clone <repo> && cd whoop_sync
+cp .env.example .env && nano .env
+make docker-up
+make docker-auth
+make docker-sync
+```
+
+### Option 3 (Local/venv, 32-bit)
+
+```bash
+git clone <repo> && cd whoop_sync
+cp .env.example .env && nano .env
+make venv-setup
+make auth
+make sync
+make dashboard
+```
+
+---
+
+## Architecture Comparison
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Docker Container                      │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐  │
-│  │ Streamlit   │  │   OAuth     │  │   Cron Job      │  │
-│  │ Dashboard   │  │   Callback  │  │   (Daily Sync)  │  │
-│  │ :8501       │  │   :8080     │  │                 │  │
-│  └─────────────┘  └─────────────┘  └─────────────────┘  │
-│                          │                               │
-│                          ▼                               │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │              Docker Volume: whoop-data            │   │
-│  │  ┌─────────────┐  ┌─────────────────────────┐    │   │
-│  │  │ whoop.db    │  │ tokens.json             │    │   │
-│  │  │ (SQLite)    │  │ (OAuth tokens)          │    │   │
-│  │  └─────────────┘  └─────────────────────────┘    │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-              ┌────────────────────────┐
-              │    Tailscale Funnel    │
-              │    (Public Access)     │
-              │    https://...ts.net   │
-              └────────────────────────┘
+Option 1: Docker (64-bit)
+┌─────────────────────────────────────────┐
+│         Docker Container                 │
+│  ┌─────────┐ ┌─────────┐ ┌───────────┐  │
+│  │Dashboard│ │ OAuth   │ │  Cron     │  │
+│  │ :8501   │ │ :8080   │ │  (sync)   │  │
+│  └─────────┘ └─────────┘ └───────────┘  │
+└─────────────────────────────────────────┘
+
+Option 3: Local/venv (32-bit)
+┌─────────────────────────────────────────┐
+│         Local Python (venv)              │
+│  ┌─────────┐ ┌─────────┐                │
+│  │Dashboard│ │ OAuth   │                │
+│  │ :8501   │ │ :8080   │                │
+│  └─────────┘ └─────────┘                │
+│                                         │
+│  Systemd: Auto-start on boot            │
+│  Cron: Daily sync                       │
+└─────────────────────────────────────────┘
+
+Optional (both options):
+┌─────────────────────────────────────────┐
+│         Tailscale Funnel                 │
+│         https://...ts.net               │
+└─────────────────────────────────────────┘
 ```

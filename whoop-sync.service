@@ -1,0 +1,16 @@
+[Unit]
+Description=Whoop Sync Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/whoop_sync
+Environment="PATH=/home/pi/whoop_sync/venv/bin"
+EnvironmentFile=/home/pi/whoop_sync/.env
+ExecStart=/home/pi/whoop_sync/venv/bin/streamlit run dashboard/dashboard.py --server.port=8501 --server.address=0.0.0.0 --server.headless=true
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
