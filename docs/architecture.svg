@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 1000 700"
+   font-family="monospace"
+   version="1.1"
+   id="svg67"
+   sodipodi:docname="architecture.svg"
+   inkscape:version="1.4.3 (0d15f75, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview67"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.63"
+     inkscape:cx="500.30675"
+     inkscape:cy="278.83436"
+     inkscape:window-width="2284"
+     inkscape:window-height="1222"
+     inkscape:window-x="10"
+     inkscape:window-y="35"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg67" />
+  <defs
+     id="defs1">
+    <marker
+       id="arrow"
+       markerWidth="8"
+       markerHeight="6"
+       refX="8"
+       refY="3"
+       orient="auto">
+      <polygon
+         points="0 0, 8 3, 0 6"
+         fill="#333"
+         id="polygon1" />
+    </marker>
+  </defs>
+  <text
+     x="500"
+     y="25"
+     text-anchor="middle"
+     font-size="14"
+     font-weight="bold"
+     id="text1">WHOOP SYNC ARCHITECTURE</text>
+  <g
+     transform="translate(22.453988,61.564417)"
+     id="g3">
+    <rect
+       width="120"
+       height="50"
+       fill="none"
+       stroke="#333333"
+       stroke-width="1.5"
+       id="rect2"
+       x="0"
+       y="0" />
+    <text
+       x="60"
+       y="20"
+       text-anchor="middle"
+       font-size="10px"
+       font-weight="bold"
+       id="text2">WHOOP Band</text>
+    <text
+       x="60"
+       y="35"
+       text-anchor="middle"
+       font-size="8px"
+       id="text3">Wearable</text>
+  </g>
+  <g
+     transform="translate(202.45399,61.564417)"
+     id="g6">
+    <rect
+       width="150"
+       height="50"
+       fill="none"
+       stroke="#333333"
+       stroke-width="1.5"
+       id="rect3"
+       x="0"
+       y="0" />
+    <text
+       x="75"
+       y="15"
+       text-anchor="middle"
+       font-size="9px"
+       font-weight="bold"
+       id="text4">WHOOP API</text>
+    <text
+       x="75"
+       y="28"
+       text-anchor="middle"
+       font-size="8px"
+       id="text5">api.prod.whoop.com</text>
+    <text
+       x="75"
+       y="40"
+       text-anchor="middle"
+       font-size="7px"
+       id="text6">OAuth 2.0 · REST</text>
+  </g>
+  <line
+     x1="142.45399"
+     y1="86.564415"
+     x2="197.45399"
+     y2="86.564415"
+     stroke="#333333"
+     stroke-width="1"
+     stroke-dasharray="4, 2"
+     marker-end="url(#arrow)"
+     id="line6" />
+  <rect
+     x="19.864922"
+     y="119.86492"
+     width="960.27014"
+     height="302.41739"
+     fill="none"
+     stroke="#333333"
+     stroke-width="1.5"
+     stroke-dasharray="6, 3"
+     id="rect6"
+     style="fill:#000000;fill-opacity:0.0961538" />
+  <text
+     x="30"
+     y="135"
+     font-size="10"
+     font-weight="bold"
+     id="text7">DOCKER: whoop-dashboard</text>
+  <g
+     transform="translate(31.226994,172.6994)"
+     id="g12">
+    <rect
+       width="200"
+       height="100"
+       fill="#f5f5f5"
+       stroke="#f59e0b"
+       stroke-width="1"
+       id="rect7"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#f59e0b"
+       id="text8">AUTH (auth.py)</text>
+    <text
+       x="10"
+       y="35"
+       font-size="8px"
+       id="text9">OAuth 2.0 Flow</text>
+    <text
+       x="10"
+       y="50"
+       font-size="8px"
+       id="text10">Callback Server :8080</text>
+    <text
+       x="10"
+       y="65"
+       font-size="8px"
+       id="text11">Token: tokens.json</text>
+    <text
+       x="10"
+       y="80"
+       font-size="8px"
+       id="text12">Auto-refresh · 3x retry</text>
+  </g>
+  <g
+     transform="translate(269.8773,154.57055)"
+     id="g17">
+    <rect
+       width="200"
+       height="80"
+       fill="#f5f5f5"
+       stroke="#00b894"
+       stroke-width="1"
+       id="rect12"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#00b894"
+       id="text13">API CLIENT (api.py)</text>
+    <text
+       x="10"
+       y="35"
+       font-size="8px"
+       id="text14">Paginated fetcher</text>
+    <text
+       x="10"
+       y="50"
+       font-size="8px"
+       id="text15">Auto token refresh</text>
+    <text
+       x="10"
+       y="65"
+       font-size="8px"
+       id="text16">Endpoints: cycles, recoveries,</text>
+    <text
+       x="10"
+       y="78"
+       font-size="8px"
+       id="text17">sleeps, workouts, profile, body</text>
+  </g>
+  <g
+     transform="translate(267.42331,252.63804)"
+     id="g21">
+    <rect
+       width="200"
+       height="80"
+       fill="#f5f5f5"
+       stroke="#a78bfa"
+       stroke-width="1"
+       id="rect17"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#a78bfa"
+       id="text18">SYNC ENGINE (sync.py)</text>
+    <text
+       x="10"
+       y="35"
+       font-size="8px"
+       id="text19">Incremental sync</text>
+    <text
+       x="10"
+       y="50"
+       font-size="8px"
+       id="text20">Full sync (--full)</text>
+    <text
+       x="10"
+       y="65"
+       font-size="8px"
+       id="text21">Orchestrates: auth → api → db</text>
+  </g>
+  <g
+     transform="translate(483.68098,154.60123)"
+     id="g31">
+    <rect
+       width="180"
+       height="180"
+       fill="#f5f5f5"
+       stroke="#0369a1"
+       stroke-width="1.5"
+       id="rect22"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#0369a1"
+       id="text22">SQLite (whoop.db)</text>
+    <rect
+       x="10"
+       y="30"
+       width="75"
+       height="22"
+       fill="none"
+       stroke="#666666"
+       stroke-width="0.5"
+       id="rect23" />
+    <text
+       x="47"
+       y="45"
+       text-anchor="middle"
+       font-size="8px"
+       id="text23">cycles</text>
+    <rect
+       x="95"
+       y="30"
+       width="75"
+       height="22"
+       fill="none"
+       stroke="#666666"
+       stroke-width="0.5"
+       id="rect24" />
+    <text
+       x="132"
+       y="45"
+       text-anchor="middle"
+       font-size="8px"
+       id="text24">recoveries</text>
+    <rect
+       x="10"
+       y="58"
+       width="75"
+       height="22"
+       fill="none"
+       stroke="#666666"
+       stroke-width="0.5"
+       id="rect25" />
+    <text
+       x="47"
+       y="73"
+       text-anchor="middle"
+       font-size="8px"
+       id="text25">sleeps</text>
+    <rect
+       x="95"
+       y="58"
+       width="75"
+       height="22"
+       fill="none"
+       stroke="#666666"
+       stroke-width="0.5"
+       id="rect26" />
+    <text
+       x="132"
+       y="73"
+       text-anchor="middle"
+       font-size="8px"
+       id="text26">workouts</text>
+    <rect
+       x="10"
+       y="86"
+       width="75"
+       height="22"
+       fill="none"
+       stroke="#666666"
+       stroke-width="0.5"
+       id="rect27" />
+    <text
+       x="47"
+       y="101"
+       text-anchor="middle"
+       font-size="8px"
+       id="text27">user_profile</text>
+    <rect
+       x="95"
+       y="86"
+       width="75"
+       height="22"
+       fill="none"
+       stroke="#666666"
+       stroke-width="0.5"
+       id="rect28" />
+    <text
+       x="132"
+       y="101"
+       text-anchor="middle"
+       font-size="8px"
+       id="text28">body_measure</text>
+    <line
+       x1="10"
+       y1="120"
+       x2="170"
+       y2="120"
+       stroke="#cccccc"
+       stroke-width="0.5"
+       id="line28" />
+    <text
+       x="10"
+       y="135"
+       font-size="7px"
+       id="text29">UPSERT (INSERT OR REPLACE)</text>
+    <text
+       x="10"
+       y="148"
+       font-size="7px"
+       id="text30">Indexes: start, cycle_id</text>
+    <text
+       x="10"
+       y="161"
+       font-size="7px"
+       id="text31">Volume: whoop-data</text>
+  </g>
+  <g
+     transform="translate(723.06748,133.43558)"
+     id="g44">
+    <rect
+       width="240"
+       height="200"
+       fill="#f5f5f5"
+       stroke="#e53e3e"
+       stroke-width="1"
+       id="rect32"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#e53e3e"
+       id="text33">STREAMLIT DASHBOARD (:8501)</text>
+    <rect
+       x="10"
+       y="30"
+       width="70"
+       height="28"
+       fill="none"
+       stroke="#999999"
+       stroke-width="0.5"
+       id="rect33" />
+    <text
+       x="45"
+       y="48"
+       text-anchor="middle"
+       font-size="8px"
+       id="text34">Recovery</text>
+    <rect
+       x="85"
+       y="30"
+       width="70"
+       height="28"
+       fill="none"
+       stroke="#999999"
+       stroke-width="0.5"
+       id="rect34" />
+    <text
+       x="120"
+       y="48"
+       text-anchor="middle"
+       font-size="8px"
+       id="text35">Sleep</text>
+    <rect
+       x="160"
+       y="30"
+       width="70"
+       height="28"
+       fill="none"
+       stroke="#999999"
+       stroke-width="0.5"
+       id="rect35" />
+    <text
+       x="195"
+       y="48"
+       text-anchor="middle"
+       font-size="8px"
+       id="text36">HR/HRV</text>
+    <rect
+       x="10"
+       y="63"
+       width="70"
+       height="28"
+       fill="none"
+       stroke="#999999"
+       stroke-width="0.5"
+       id="rect36" />
+    <text
+       x="45"
+       y="81"
+       text-anchor="middle"
+       font-size="8px"
+       id="text37">Workouts</text>
+    <rect
+       x="85"
+       y="63"
+       width="70"
+       height="28"
+       fill="none"
+       stroke="#999999"
+       stroke-width="0.5"
+       id="rect37" />
+    <text
+       x="120"
+       y="81"
+       text-anchor="middle"
+       font-size="8px"
+       id="text38">Insights</text>
+    <rect
+       x="160"
+       y="63"
+       width="70"
+       height="28"
+       fill="none"
+       stroke="#999999"
+       stroke-width="0.5"
+       id="rect38" />
+    <text
+       x="195"
+       y="81"
+       text-anchor="middle"
+       font-size="8px"
+       id="text39">MLR Model</text>
+    <line
+       x1="10"
+       y1="100"
+       x2="230"
+       y2="100"
+       stroke="#cccccc"
+       stroke-width="0.5"
+       id="line39" />
+    <text
+       x="10"
+       y="118"
+       font-size="8px"
+       font-weight="bold"
+       id="text40">Stack:</text>
+    <text
+       x="10"
+       y="135"
+       font-size="8px"
+       id="text41">Streamlit · Pandas · Plotly</text>
+    <text
+       x="10"
+       y="150"
+       font-size="8px"
+       id="text42">Statsmodels · SciPy</text>
+    <text
+       x="10"
+       y="175"
+       font-size="7px"
+       id="text43">OLS regression · Correlations</text>
+    <text
+       x="10"
+       y="188"
+       font-size="7px"
+       id="text44">Interactive charts · Dark theme</text>
+  </g>
+  <line
+     x1="664.98877"
+     y1="239.96211"
+     x2="723.50818"
+     y2="240.65138"
+     stroke="#333333"
+     stroke-width="1"
+     marker-end="url(#arrow)"
+     id="line44" />
+  <text
+     x="681.65643"
+     y="250.48466"
+     font-size="7px"
+     id="text45">read</text>
+  <g
+     transform="translate(266.01227,345.46012)"
+     id="g48">
+    <rect
+       width="120"
+       height="60"
+       fill="#f5f5f5"
+       stroke="#a78bfa"
+       stroke-width="1"
+       id="rect45"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#a78bfa"
+       id="text46">CRON</text>
+    <text
+       x="10"
+       y="32"
+       font-size="8px"
+       id="text47">Daily sync</text>
+    <text
+       x="10"
+       y="45"
+       font-size="8px"
+       id="text48">$SYNC_HOUR</text>
+  </g>
+  <g
+     transform="translate(485.15337,347.91411)"
+     id="g51">
+    <rect
+       width="100"
+       height="60"
+       fill="#f5f5f5"
+       stroke="#666666"
+       stroke-width="1"
+       id="rect48"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       id="text49">CLI (main.py)</text>
+    <text
+       x="10"
+       y="32"
+       font-size="8px"
+       id="text50">auth · reauth</text>
+    <text
+       x="10"
+       y="45"
+       font-size="8px"
+       id="text51">sync · status</text>
+  </g>
+  <g
+     transform="translate(781.84049,61.042945)"
+     id="g54">
+    <rect
+       width="190"
+       height="50"
+       fill="none"
+       stroke="#4a9eff"
+       stroke-width="1"
+       id="rect52"
+       x="0"
+       y="0" />
+    <text
+       x="95"
+       y="20"
+       text-anchor="middle"
+       font-size="10px"
+       font-weight="bold"
+       fill="#4a9eff"
+       id="text53">User / Browser</text>
+    <text
+       x="95"
+       y="38"
+       text-anchor="middle"
+       font-size="8px"
+       id="text54">Dashboard access</text>
+  </g>
+  <g
+     transform="translate(18.773009,428.6503)"
+     id="g57">
+    <rect
+       width="150"
+       height="55"
+       fill="none"
+       stroke="#666666"
+       stroke-width="1"
+       id="rect54"
+       x="0"
+       y="0" />
+    <text
+       x="75"
+       y="18"
+       text-anchor="middle"
+       font-size="9px"
+       font-weight="bold"
+       id="text55">Docker Hub</text>
+    <text
+       x="75"
+       y="35"
+       text-anchor="middle"
+       font-size="8px"
+       id="text56">idossha/whoop-sync</text>
+    <text
+       x="75"
+       y="48"
+       text-anchor="middle"
+       font-size="7px"
+       id="text57">Container registry</text>
+  </g>
+  <g
+     transform="translate(176.07362,428.03681)"
+     id="g60">
+    <rect
+       width="200"
+       height="55"
+       fill="none"
+       stroke="#f59e0b"
+       stroke-width="1"
+       id="rect57"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#f59e0b"
+       id="text58">CONFIG</text>
+    <text
+       x="10"
+       y="32"
+       font-size="8px"
+       id="text59">.env: CLIENT_ID, CLIENT_SECRET</text>
+    <text
+       x="10"
+       y="45"
+       font-size="8px"
+       id="text60">config.py: OAuth URLs, Scopes</text>
+  </g>
+  <g
+     transform="translate(492.76073,436.01227)"
+     id="g63">
+    <rect
+       width="170"
+       height="55"
+       fill="none"
+       stroke="#7c3aed"
+       stroke-width="1"
+       id="rect60"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#7c3aed"
+       id="text61">NETWORK</text>
+    <text
+       x="10"
+       y="32"
+       font-size="8px"
+       id="text62">Tailscale VPN (private)</text>
+    <text
+       x="10"
+       y="45"
+       font-size="8px"
+       id="text63">Tailscale Funnel (public)</text>
+  </g>
+  <g
+     transform="translate(670.85889,436.01227)"
+     id="g66">
+    <rect
+       width="170"
+       height="55"
+       fill="none"
+       stroke="#2563eb"
+       stroke-width="1"
+       id="rect63"
+       x="0"
+       y="0" />
+    <text
+       x="10"
+       y="15"
+       font-size="9px"
+       font-weight="bold"
+       fill="#2563eb"
+       id="text64">WATCHTOWER</text>
+    <text
+       x="10"
+       y="32"
+       font-size="8px"
+       id="text65">Auto-updates container</text>
+    <text
+       x="10"
+       y="45"
+       font-size="8px"
+       id="text66">Polls daily 4:00 AM</text>
+  </g>
+</svg>
