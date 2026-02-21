@@ -1,10 +1,11 @@
-.PHONY: help install auth sync sync-full dashboard docker-build docker-up docker-down docker-logs docker-sync docker-auth docker-reauth docker-status docker-shell clean setup
+.PHONY: help install auth sync sync-full dashboard docker-build docker-pull docker-up docker-down docker-logs docker-sync docker-auth docker-reauth docker-status docker-shell clean setup
 
 help:
 	@echo "Whoop Sync - Commands:"
 	@echo ""
 	@echo "Docker Operations:"
-	@echo "  make docker-build  - Build Docker image"
+	@echo "  make docker-pull   - Pull latest image from Docker Hub"
+	@echo "  make docker-build  - Build Docker image locally"
 	@echo "  make docker-up     - Start all Docker services"
 	@echo "  make docker-down   - Stop all Docker services"
 	@echo "  make docker-logs   - View Docker logs (follow mode)"
@@ -48,8 +49,11 @@ sync-full:
 dashboard:
 	streamlit run dashboard/dashboard.py
 
+docker-pull:
+	docker pull idossha/whoop-sync:latest
+
 docker-build:
-	docker compose build --no-cache
+	docker build --no-cache -t idossha/whoop-sync:latest .
 
 docker-up:
 	docker compose up -d
