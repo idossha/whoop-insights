@@ -997,11 +997,25 @@ with tab7:
 
     df_mlr_hrv = (
         cycles_filtered[
-            ["date", "strain", "id", "max_heart_rate", "average_heart_rate"]
+            [
+                "date",
+                "strain",
+                "id",
+                "max_heart_rate",
+                "average_heart_rate",
+                "kilojoule",
+            ]
         ]
+        .rename(columns={"strain": "day_strain"})
         .merge(
             recoveries_filtered[
-                ["cycle_id", "recovery_score", "hrv_rmssd_milli", "resting_heart_rate"]
+                [
+                    "cycle_id",
+                    "hrv_rmssd_milli",
+                    "resting_heart_rate",
+                    "spo2_percentage",
+                    "skin_temp_celsius",
+                ]
             ],
             left_on="id",
             right_on="cycle_id",
@@ -1015,6 +1029,9 @@ with tab7:
                     "total_rem_sleep_time_milli",
                     "total_light_sleep_time_milli",
                     "sleep_efficiency_percentage",
+                    "respiratory_rate",
+                    "sleep_consistency_percentage",
+                    "disturbance_count",
                 ]
             ],
             left_on="id",
@@ -1024,10 +1041,23 @@ with tab7:
     )
 
     if not workouts_filtered.empty:
-        workout_dates = set(workouts_filtered["date"])
-        df_mlr_hrv["had_workout"] = df_mlr_hrv["date"].isin(workout_dates).astype(int)
+        workout_agg = (
+            workouts_filtered.groupby("date")
+            .agg(
+                workout_strain=("strain", "sum"),
+                workout_kilojoule=("kilojoule", "sum"),
+                workout_count=("id", "count"),
+            )
+            .reset_index()
+        )
+        df_mlr_hrv = df_mlr_hrv.merge(workout_agg, on="date", how="left")
+        df_mlr_hrv["workout_strain"] = df_mlr_hrv["workout_strain"].fillna(0)
+        df_mlr_hrv["workout_kilojoule"] = df_mlr_hrv["workout_kilojoule"].fillna(0)
+        df_mlr_hrv["workout_count"] = df_mlr_hrv["workout_count"].fillna(0).astype(int)
     else:
-        df_mlr_hrv["had_workout"] = 0
+        df_mlr_hrv["workout_strain"] = 0
+        df_mlr_hrv["workout_kilojoule"] = 0
+        df_mlr_hrv["workout_count"] = 0
 
     df_mlr_hrv["deep_sleep_hrs"] = (
         df_mlr_hrv["total_slow_wave_sleep_time_milli"] / 3600000
@@ -1039,17 +1069,48 @@ with tab7:
         + df_mlr_hrv["total_light_sleep_time_milli"]
     ) / 3600000
 
-    feature_cols_hrv = [
+    core_features = [
         "deep_sleep_hrs",
         "rem_sleep_hrs",
-        "recovery_score",
-        "max_heart_rate",
-        "strain",
-        "had_workout",
+        "total_sleep_hrs",
+        "sleep_efficiency_percentage",
+        "resting_heart_rate",
+        "respiratory_rate",
+        "workout_strain",
+        "day_strain",
     ]
+
+    optional_features = ["spo2_percentage", "skin_temp_celsius", "disturbance_count"]
+    feature_labels = {
+        "deep_sleep_hrs": "Deep Sleep (hrs)",
+        "rem_sleep_hrs": "REM Sleep (hrs)",
+        "total_sleep_hrs": "Total Sleep (hrs)",
+        "sleep_efficiency_percentage": "Sleep Efficiency (%)",
+        "resting_heart_rate": "Resting HR (bpm)",
+        "respiratory_rate": "Respiratory Rate",
+        "workout_strain": "Workout Strain",
+        "day_strain": "Day Strain",
+        "spo2_percentage": "SpO2 (%)",
+        "skin_temp_celsius": "Skin Temp (°C)",
+        "disturbance_count": "Disturbances",
+    }
+
+    available_optional = []
+    for feat in optional_features:
+        if feat in df_mlr_hrv.columns:
+            non_null_count = df_mlr_hrv[feat].notna().sum()
+            if non_null_count >= 10:
+                available_optional.append(feat)
+
+    feature_cols_hrv = core_features + available_optional
     target_col_hrv = "hrv_rmssd_milli"
 
     df_model_hrv = df_mlr_hrv[feature_cols_hrv + [target_col_hrv, "date"]].dropna()
+
+    if available_optional:
+        st.caption(
+            f"Optional predictors included: {', '.join([feature_labels[f] for f in available_optional])}"
+        )
 
     if len(df_model_hrv) < 10:
         st.warning(
@@ -1087,15 +1148,8 @@ with tab7:
 
         coef_df_hrv = pd.DataFrame(
             {
-                "Feature": [
-                    "Intercept",
-                    "Deep Sleep (hrs)",
-                    "REM Sleep (hrs)",
-                    "Recovery Score",
-                    "Max HR (bpm)",
-                    "Strain",
-                    "Had Workout",
-                ],
+                "Feature": ["Intercept"]
+                + [feature_labels[f] for f in feature_cols_hrv],
                 "Coefficient": model_hrv.params.values,
                 "Std Error": model_hrv.bse.values,
                 "t-value": model_hrv.tvalues.values,
@@ -1299,14 +1353,7 @@ with tab7:
 
         partial_corr_df_hrv = pd.DataFrame(
             {
-                "Feature": [
-                    "Deep Sleep (hrs)",
-                    "REM Sleep (hrs)",
-                    "Recovery Score",
-                    "Max HR (bpm)",
-                    "Strain",
-                    "Had Workout",
-                ],
+                "Feature": [feature_labels[f] for f in feature_cols_hrv],
                 "Partial Correlation": partial_corrs_hrv,
             }
         )
