@@ -31,13 +31,6 @@ The closer points align to the diagonal line, the more accurate the predictions.
 - **HTTPS** - Caddy reverse proxy with auto SSL
 - **Easy Sharing** - Tailscale Funnel for public access
 
-## Services
-
-| Service | Port | Purpose |
-|---------|------|---------|
-| Dashboard | 8501 | Streamlit UI |
-| Callback | 8080 | OAuth callback server |
-| Caddy | 80/443 | HTTPS proxy |
 
 ## Dashboard Tabs
 
@@ -54,7 +47,6 @@ The closer points align to the diagonal line, the more accurate the predictions.
 All data persists in Docker volumes:
 
 - `whoop-data` - Database and auth tokens
-- `caddy-data` - SSL certificates
 
 ## License
 
