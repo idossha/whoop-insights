@@ -269,10 +269,25 @@ tailscale funnel --https=443 off
 
 ### Security Note
 
-The dashboard has no built-in authentication. Anyone with access can view your Whoop data.
+The dashboard is read-only. Here's what sharing exposes:
 
-- **Tailnet only**: Secure for trusted team members
-- **Public Funnel**: Consider adding auth or limiting exposure time
+**What others CAN see:**
+- Recovery, sleep, HRV, workout history
+- Personal fitness patterns and trends
+
+**What others CANNOT access:**
+- Your Whoop account or credentials
+- API tokens (stored securely inside container)
+- Ability to modify or delete data
+- Any other services on your machine
+
+The only real risk is **privacy** - your fitness data becomes visible. This is uncomfortable but not dangerous for most people.
+
+If you're okay sharing fitness data, Funnel is safe to use. Turn it off when done:
+
+```bash
+tailscale funnel --https=443 off
+```
 
 ---
 
