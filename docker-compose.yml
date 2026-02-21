@@ -4,9 +4,10 @@ services:
     container_name: whoop-dashboard
     ports:
       - "8501:8501"
+      - "8080:8080"
     volumes:
       - whoop-data:/app/data
-      - ./tokens.json:/app/tokens.json:ro
+      - whoop-tokens:/app
     environment:
       - WHOOP_CLIENT_ID=${WHOOP_CLIENT_ID}
       - WHOOP_CLIENT_SECRET=${WHOOP_CLIENT_SECRET}
@@ -103,6 +104,7 @@ services:
 
 volumes:
   whoop-data:
+  whoop-tokens:
   prometheus-data:
   grafana-data:
   caddy-data:

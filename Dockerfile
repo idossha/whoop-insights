@@ -4,6 +4,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
     cron \
+    curl \
     build-essential \
     gcc \
     && rm -rf /var/lib/apt/lists/*

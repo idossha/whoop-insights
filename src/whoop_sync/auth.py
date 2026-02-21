@@ -121,9 +121,9 @@ class WhoopAuth:
         data = {
             "grant_type": "refresh_token",
             "refresh_token": self.refresh_token,
+            "redirect_uri": config.redirect_uri,
             "client_id": config.client_id,
             "client_secret": config.client_secret,
-            "scope": " ".join(config.scopes),
         }
 
         response = requests.post(config.token_url, data=data)
