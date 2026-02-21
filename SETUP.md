@@ -10,7 +10,7 @@ This guide walks you through setting up the Whoop Dashboard from scratch. All op
 2. [Clone the Repository](#2-clone-the-repository)
 3. [Get Whoop API Credentials](#3-get-whoop-api-credentials)
 4. [Configure Environment](#4-configure-environment)
-5. [Build and Start Services](#5-build-and-start-services)
+5. [Pull and Start Services](#5-pull-and-start-services)
 6. [Authenticate with Whoop](#6-authenticate-with-whoop)
 7. [Sync Your Data](#7-sync-your-data)
 8. [Access the Dashboard](#8-access-the-dashboard)
@@ -97,9 +97,9 @@ Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
 
 ---
 
-## 5. Build and Start Services
+## 5. Pull and Start Services
 
-Start all services (automatically pulls latest image if needed):
+Start all services (automatically pulls `idossha/whoop-sync:latest` from Docker Hub):
 
 ```bash
 make docker-up
@@ -108,17 +108,32 @@ make docker-up
 Or manually:
 
 ```bash
-docker compose build --no-cache
 docker compose up -d
 ```
 
-Wait for the setup to complete (takes ~1-2 minutes). The container will start and show:
+Wait for the container to start (~30 seconds). You'll see:
 
 ```
 NOT AUTHENTICATED
 ==================
 Run the following command to authenticate:
   docker exec whoop-dashboard python main.py auth
+```
+
+### Updating to Latest Version
+
+```bash
+make docker-pull    # Pull latest image
+make docker-down    # Stop services
+make docker-up      # Restart with new image
+```
+
+### Building Locally (Optional)
+
+If you want to modify the code and build locally:
+
+```bash
+make docker-build
 ```
 
 ---
@@ -304,10 +319,9 @@ Deploy to a Raspberry Pi for always-on monitoring:
    cd whoop_sync
    cp .env.example .env
    nano .env  # Add your credentials
-   make docker-build
-   make docker-up
-   make docker-auth  # Complete authentication
-   make docker-sync  # Initial sync
+   make docker-up        # Pulls image from Docker Hub
+   make docker-auth      # Complete authentication
+   make docker-sync      # Initial sync
    ```
 
 4. **Enable public access (optional):**
@@ -376,27 +390,28 @@ Edit ports in `docker-compose.yml` if 8501 or 8080 are in use.
 ### Docker Management
 
 ```bash
-make docker-up          # Start all services
-make docker-down        # Stop all services
-make docker-build       # Rebuild image
-make docker-logs        # View dashboard logs
-make docker-shell       # Open shell in container
-make docker-clean       # Remove containers and volumes (WARNING: deletes data)
+make docker-pull       # Pull latest image from Docker Hub
+make docker-up         # Start all services
+make docker-down       # Stop all services
+make docker-build      # Build image locally (for development)
+make docker-logs       # View dashboard logs
+make docker-shell      # Open shell in container
+make docker-clean      # Remove containers and volumes (WARNING: deletes data)
 ```
 
 ### Authentication
 
 ```bash
-make docker-status      # Check auth status
-make docker-auth        # Start authentication flow
-make docker-reauth      # Re-authenticate (clear old tokens)
+make docker-status     # Check auth status
+make docker-auth       # Start authentication flow
+make docker-reauth     # Re-authenticate (clear old tokens)
 ```
 
 ### Data Sync
 
 ```bash
-make docker-sync        # Incremental sync
-make docker-sync-full   # Full historical sync
+make docker-sync       # Incremental sync
+make docker-sync-full  # Full historical sync
 docker exec whoop-dashboard python main.py stats  # Database stats
 ```
 
@@ -421,9 +436,8 @@ tailscale funnel --https=443 off
 # Complete setup from scratch
 git clone <repo> && cd whoop_sync
 cp .env.example .env && nano .env
-make docker-build
-make docker-up
-make docker-auth  # Visit URL shown
+make docker-up          # Pulls from Docker Hub
+make docker-auth        # Visit URL shown
 make docker-sync
 
 # Access dashboard
