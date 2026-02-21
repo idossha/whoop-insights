@@ -1,6 +1,6 @@
 # Whoop Dashboard
 
-Personal fitness dashboard with automated sync, monitoring, and MLR models for Recovery and HRV prediction.
+Personal fitness dashboard with automated sync and MLR models for Recovery and HRV prediction.
 
 ## Quick Start
 
@@ -21,7 +21,6 @@ See [SETUP.md](SETUP.md) for detailed instructions.
 - **Automated Sync** - Daily data sync at configurable time
 - **Interactive Dashboard** - Recovery, sleep, heart rate, workouts
 - **MLR Models** - Predict recovery & HRV from sleep, strain, HRV
-- **Monitoring** - Grafana dashboards with Prometheus metrics
 - **Auto-backup** - 30-day retention database backups
 - **HTTPS** - Caddy reverse proxy with auto SSL
 - **Easy Sharing** - Tailscale Funnel for public access
@@ -32,8 +31,6 @@ See [SETUP.md](SETUP.md) for detailed instructions.
 |---------|------|---------|
 | Dashboard | 8501 | Streamlit UI |
 | Callback | 8080 | OAuth callback server |
-| Grafana | 3000 | Monitoring |
-| Prometheus | 9090 | Metrics |
 | Caddy | 80/443 | HTTPS proxy |
 
 ## Dashboard Tabs
@@ -137,7 +134,6 @@ whoop_sync/
 │   ├── db.py            # SQLite database
 │   ├── sync.py          # Data synchronization
 │   └── config.py        # Configuration
-├── monitoring/          # Prometheus & Grafana
 ├── docs/                # Documentation images
 ├── scripts/             # Setup & backup
 ├── Dockerfile           # Container definition
@@ -150,8 +146,6 @@ whoop_sync/
 All data persists in Docker volumes:
 
 - `whoop-data` - Database and auth tokens
-- `grafana-data` - Grafana dashboards
-- `prometheus-data` - Metrics storage
 - `caddy-data` - SSL certificates
 
 ## License
