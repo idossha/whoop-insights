@@ -16,9 +16,8 @@ This guide walks you through setting up the Whoop Dashboard from scratch. All op
 8. [Access the Dashboard](#8-access-the-dashboard)
 9. [Share Publicly with Tailscale](#9-share-publicly-with-tailscale)
 10. [Optional: Raspberry Pi Deployment](#10-optional-raspberry-pi-deployment)
-11. [Optional: GitHub Actions Auto-Deploy](#11-optional-github-actions-auto-deploy)
-12. [Troubleshooting](#12-troubleshooting)
-13. [Common Commands](#13-common-commands)
+11. [Troubleshooting](#11-troubleshooting)
+12. [Common Commands](#12-common-commands)
 
 ---
 
@@ -324,35 +323,7 @@ Deploy to a Raspberry Pi for always-on monitoring:
 
 ---
 
-## 11. Optional: GitHub Actions Auto-Deploy
-
-Automatically deploy to your Raspberry Pi on push to `main`:
-
-### Add GitHub Secrets:
-
-Go to your repo → Settings → Secrets and variables → Actions
-
-| Secret | Description |
-|--------|-------------|
-| `PI_HOST` | Pi IP address or domain |
-| `PI_USER` | SSH username (e.g., `pi`) |
-| `PI_SSH_KEY` | SSH private key |
-| `PI_DEPLOY_PATH` | Path on Pi (e.g., `/home/pi/whoop_sync`) |
-
-### Generate SSH key (on your machine):
-
-```bash
-ssh-keygen -t ed25519 -C "github-actions"
-ssh-copy-id -i ~/.ssh/github-actions.pub pi@<PI_IP>
-```
-
-Paste the private key into `PI_SSH_KEY` secret.
-
-Pushes to `main` will now auto-deploy.
-
----
-
-## 12. Troubleshooting
+## 11. Troubleshooting
 
 ### Authentication fails
 
@@ -406,7 +377,7 @@ Edit ports in `docker-compose.yml` if 8501, 8080, 3000, or 9090 are in use.
 
 ---
 
-## 13. Common Commands
+## 12. Common Commands
 
 ### Docker Management
 

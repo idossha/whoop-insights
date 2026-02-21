@@ -24,7 +24,6 @@ See [SETUP.md](SETUP.md) for detailed instructions.
 - **Monitoring** - Grafana dashboards with Prometheus metrics
 - **Auto-backup** - 30-day retention database backups
 - **HTTPS** - Caddy reverse proxy with auto SSL
-- **CI/CD** - GitHub Actions auto-deploy to Raspberry Pi
 - **Easy Sharing** - Tailscale Funnel for public access
 
 ## Services
@@ -46,6 +45,34 @@ See [SETUP.md](SETUP.md) for detailed instructions.
 - **Insights** - Correlation analysis
 - **MLR Recovery** - Predict recovery
 - **MLR HRV** - Predict HRV
+
+## MLR Models
+
+The dashboard includes Multiple Linear Regression models to predict Recovery and HRV based on your sleep, strain, and other metrics.
+
+### Correlation Analysis
+
+Understanding which metrics influence each other:
+
+![Correlation Matrix](docs/correlation_matrix.png)
+
+The correlation matrix shows relationships between key metrics - helping identify which factors most impact recovery and HRV.
+
+### Model Coefficients
+
+See the weight of each variable in the prediction models:
+
+![Coefficients](docs/coefficients.png)
+
+Positive coefficients increase the predicted value, negative coefficients decrease it. The magnitude shows the strength of each factor's influence.
+
+### Prediction Accuracy
+
+Compare predicted vs actual values:
+
+![Actual vs Predicted](docs/actual_vs_predicted.png)
+
+The closer points align to the diagonal line, the more accurate the predictions. This helps validate model performance.
 
 ## Commands
 
@@ -111,6 +138,7 @@ whoop_sync/
 │   ├── sync.py          # Data synchronization
 │   └── config.py        # Configuration
 ├── monitoring/          # Prometheus & Grafana
+├── docs/                # Documentation images
 ├── scripts/             # Setup & backup
 ├── Dockerfile           # Container definition
 ├── docker-compose.yml   # Service orchestration
