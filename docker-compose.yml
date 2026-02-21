@@ -1,6 +1,7 @@
 services:
   dashboard:
     image: idossha/whoop-sync:latest
+    platform: linux/arm64
     container_name: whoop-dashboard
     ports:
       - "8501:8501"
