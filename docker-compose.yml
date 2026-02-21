@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: whoop-sync:latest
+    image: idossha/whoop-sync:latest
     container_name: whoop-dashboard
     ports:
       - "8501:8501"
