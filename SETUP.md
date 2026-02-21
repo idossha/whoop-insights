@@ -99,10 +99,9 @@ Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X` in nano).
 
 ## 5. Build and Start Services
 
-Build the Docker image and start all services:
+Start all services (automatically pulls latest image if needed):
 
 ```bash
-make docker-build
 make docker-up
 ```
 
