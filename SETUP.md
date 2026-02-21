@@ -223,23 +223,56 @@ make docker-sync
 
 ---
 
-## Sharing Publicly with Tailscale
+## Sharing with Tailscale
 
-Share your dashboard with anyone (no Tailscale required for them):
+### Option 1: Tailnet Only (Private)
+
+Share with people you've added to your Tailscale network:
 
 ```bash
 # Install Tailscale
 curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 
-# Enable public access
+# Share your Tailscale IP with tailnet members
+# Access at: http://<your-tailscale-ip>:8501
+```
+
+To find your Tailscale IP: `tailscale ip -4`
+
+### Option 2: Tailscale Funnel (Public)
+
+Share publicly with anyone - they don't need Tailscale:
+
+```bash
+# Install Tailscale
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+
+# Enable Funnel on your tailnet (one-time setup)
+# Go to: https://login.tailscale.com/admin/dns/funnel
+
+# Start Funnel (runs in background)
 tailscale funnel --bg --https=443 http://localhost:8501
 
-# Your URL: https://<machine-name>.tail<id>.ts.net/
+# Your public URL: https://<machine-name>.tail<id>.ts.net/
+```
+
+**Funnel commands:**
+```bash
+# View active funnels
+tailscale funnel status
 
 # Stop sharing
 tailscale funnel --https=443 off
 ```
+
+### Security Note
+
+The dashboard has no built-in authentication. Anyone with access can view your Whoop data.
+
+- **Tailnet only**: Secure for trusted team members
+- **Public Funnel**: Consider adding auth or limiting exposure time
 
 ---
 
