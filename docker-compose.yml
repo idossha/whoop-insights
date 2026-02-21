@@ -1,8 +1,5 @@
 services:
   dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: idossha/whoop-sync:latest
     container_name: whoop-dashboard
     ports:
