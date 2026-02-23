@@ -11,7 +11,7 @@ class Config:
     client_id: str = os.getenv("WHOOP_CLIENT_ID", "")
     client_secret: str = os.getenv("WHOOP_CLIENT_SECRET", "")
     redirect_uri: str = os.getenv(
-        "WHOOP_REDIRECT_URI", "http://localhost:8080/callback"
+        "WHOOP_REDIRECT_URI", "http://localhost:8081/callback"
     )
     db_path: str = os.getenv("WHOOP_DB_PATH", "whoop.db")
     tokens_file: str = os.getenv("WHOOP_TOKENS_FILE", "tokens.json")
