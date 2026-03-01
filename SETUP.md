@@ -309,6 +309,27 @@ docker logs whoop-dashboard
 2. Check credentials in `.env`
 3. Re-authenticate: `make docker-reauth`
 
+### Authenticating from a remote server (Raspberry Pi / headless)
+
+The auth callback goes to `localhost:8080` — which is the **server**, not your laptop. After login, your browser tries to reach your laptop's port 8080 and fails.
+
+**Fix: SSH tunnel**
+
+On your local machine, open a tunnel before authenticating:
+
+```bash
+ssh -L 8080:localhost:8080 <user>@<server-ip-or-hostname>
+```
+
+Keep that session open, then in another terminal run:
+
+```bash
+make docker-reauth
+```
+
+Open the URL it prints in your **local browser**. When Whoop redirects to `localhost:8080/callback`, the tunnel forwards it to the server automatically.
+ 
+
 ### No data appears
 
 ```bash
