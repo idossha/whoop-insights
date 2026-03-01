@@ -2,7 +2,7 @@
 
 Personal fitness dashboard with automated sync and MLR models for Recovery and HRV prediction.
 
-Example dashboard: https://idos-macbook-pro.tail9eb77e.ts.net
+Example dashboard: https://ido-pi.tail9eb77e.ts.net/
 
 See [SETUP.md](SETUP.md) for detailed instructions on how to deploy.
 
