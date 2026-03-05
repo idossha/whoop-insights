@@ -656,8 +656,45 @@ with tab6:
 
         st.markdown("---")
 
+        # Scatter plot: Actual vs Predicted
+        st.markdown("### Prediction Accuracy")
+
+        fig_scatter_rec = go.Figure()
+        fig_scatter_rec.add_trace(
+            go.Scatter(
+                x=ridge_rec["actuals"],
+                y=ridge_rec["predictions"],
+                mode="markers",
+                marker=dict(color="coral", size=8, opacity=0.7, line=dict(color="black", width=1)),
+                name="Observations",
+                hovertemplate="Actual: %{x:.0f}<br>Predicted: %{y:.0f}<extra></extra>",
+            )
+        )
+        min_val_rec = min(ridge_rec["actuals"].min(), ridge_rec["predictions"].min())
+        max_val_rec = max(ridge_rec["actuals"].max(), ridge_rec["predictions"].max())
+        fig_scatter_rec.add_trace(
+            go.Scatter(
+                x=[min_val_rec, max_val_rec],
+                y=[min_val_rec, max_val_rec],
+                mode="lines",
+                line=dict(color="#E74C3C", dash="dash", width=2),
+                name="Perfect Fit",
+            )
+        )
+        fig_scatter_rec.update_layout(
+            title=f"Recovery Prediction (R² = {ridge_rec['r2']:.2f})",
+            xaxis_title="Actual Recovery",
+            yaxis_title="Predicted Recovery",
+            height=400,
+            margin=dict(l=0, r=0, t=40, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        )
+        st.plotly_chart(fig_scatter_rec, width="stretch")
+
+        st.markdown("---")
+
         # Timeline plot
-        st.markdown("### Predicted vs Actual Recovery Over Time")
+        st.markdown("### Recovery Over Time")
 
         sorted_idx = np.argsort(ridge_rec["dates"])
         sorted_dates = ridge_rec["dates"][sorted_idx]
@@ -763,8 +800,45 @@ with tab7:
 
         st.markdown("---")
 
+        # Scatter plot: Actual vs Predicted
+        st.markdown("### Prediction Accuracy")
+
+        fig_scatter_hrv = go.Figure()
+        fig_scatter_hrv.add_trace(
+            go.Scatter(
+                x=ridge_hrv["actuals"],
+                y=ridge_hrv["predictions"],
+                mode="markers",
+                marker=dict(color="steelblue", size=8, opacity=0.7, line=dict(color="black", width=1)),
+                name="Observations",
+                hovertemplate="Actual: %{x:.1f}<br>Predicted: %{y:.1f}<extra></extra>",
+            )
+        )
+        min_val_hrv = min(ridge_hrv["actuals"].min(), ridge_hrv["predictions"].min())
+        max_val_hrv = max(ridge_hrv["actuals"].max(), ridge_hrv["predictions"].max())
+        fig_scatter_hrv.add_trace(
+            go.Scatter(
+                x=[min_val_hrv, max_val_hrv],
+                y=[min_val_hrv, max_val_hrv],
+                mode="lines",
+                line=dict(color="#E74C3C", dash="dash", width=2),
+                name="Perfect Fit",
+            )
+        )
+        fig_scatter_hrv.update_layout(
+            title=f"HRV Prediction (R² = {ridge_hrv['r2']:.2f})",
+            xaxis_title="Actual HRV (ms)",
+            yaxis_title="Predicted HRV (ms)",
+            height=400,
+            margin=dict(l=0, r=0, t=40, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        )
+        st.plotly_chart(fig_scatter_hrv, width="stretch")
+
+        st.markdown("---")
+
         # Timeline plot
-        st.markdown("### Predicted vs Actual HRV Over Time")
+        st.markdown("### HRV Over Time")
 
         sorted_idx_hrv = np.argsort(ridge_hrv["dates"])
         sorted_dates_hrv = ridge_hrv["dates"][sorted_idx_hrv]
