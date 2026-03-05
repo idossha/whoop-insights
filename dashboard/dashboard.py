@@ -193,7 +193,7 @@ with tab1:
 
     fig.update_layout(height=500, showlegend=False, margin=dict(l=0, r=0, t=30, b=0))
     fig.update_xaxes(title_text="Date", row=2, col=1)
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
     sleep_df = sleeps_filtered.sort_values("date")
@@ -250,7 +250,7 @@ with tab2:
         margin=dict(l=0, r=0, t=30, b=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
-    st.plotly_chart(fig_stages, width="stretch")
+    st.plotly_chart(fig_stages, use_container_width=True)
 
     st.subheader("Sleep Performance & Efficiency Trend")
 
@@ -281,7 +281,7 @@ with tab2:
         margin=dict(l=0, r=0, t=30, b=0),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
-    st.plotly_chart(fig_perf, width="stretch")
+    st.plotly_chart(fig_perf, use_container_width=True)
 
 with tab3:
     df_hr_base = cycles_filtered[
@@ -351,7 +351,7 @@ with tab3:
     fig.update_xaxes(title_text="Date", row=2, col=1)
     fig.update_yaxes(title_text="BPM", row=1, col=1)
     fig.update_yaxes(title_text="ms", row=2, col=1)
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 with tab4:
     if not workouts_filtered.empty:
@@ -371,7 +371,7 @@ with tab4:
                 title="Workouts by Type",
             )
             fig.update_layout(margin=dict(l=0, r=0, t=30, b=0))
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
 
         with col2:
             fig = px.scatter(
@@ -384,7 +384,7 @@ with tab4:
                 hover_data=["average_heart_rate"],
             )
             fig.update_layout(margin=dict(l=0, r=0, t=30, b=0))
-            st.plotly_chart(fig, width="stretch")
+            st.plotly_chart(fig, use_container_width=True)
 
         st.subheader("Recent Workouts")
         display_cols = [
@@ -406,7 +406,7 @@ with tab4:
             "Max HR",
             "Duration (min)",
         ]
-        st.dataframe(workout_display, width="stretch", hide_index=True)
+        st.dataframe(workout_display, use_container_width=True, hide_index=True)
     else:
         st.info("No workouts in selected date range.")
 
@@ -482,7 +482,7 @@ with tab5:
         title="Feature Correlations",
     )
     fig_corr.update_layout(height=500, margin=dict(l=0, r=0, t=40, b=0))
-    st.plotly_chart(fig_corr, width="stretch")
+    st.plotly_chart(fig_corr, use_container_width=True)
 
     st.markdown("### Key Relationships")
 
@@ -493,12 +493,12 @@ with tab5:
             df_insights,
             x="sleep_hrs",
             y="recovery_score",
-            trendline="lowess",
+            trendline="ols",
             title="Sleep Hours vs Recovery Score",
             labels={"sleep_hrs": "Sleep (hours)", "recovery_score": "Recovery (%)"},
         )
         fig_sleep_rec.update_layout(margin=dict(l=0, r=0, t=30, b=0))
-        st.plotly_chart(fig_sleep_rec, width="stretch")
+        st.plotly_chart(fig_sleep_rec, use_container_width=True)
 
         if df_insights["sleep_hrs"].notna().sum() > 2:
             corr_val = df_insights["sleep_hrs"].corr(df_insights["recovery_score"])
@@ -510,13 +510,13 @@ with tab5:
             df_insights,
             x="hrv_rmssd_milli",
             y="recovery_score",
-            trendline="lowess",
+            trendline="ols",
             title="HRV vs Recovery Score",
             labels={"hrv_rmssd_milli": "HRV (ms)", "recovery_score": "Recovery (%)"},
             color_discrete_sequence=["#9B59B6"],
         )
         fig_hrv_rec.update_layout(margin=dict(l=0, r=0, t=30, b=0))
-        st.plotly_chart(fig_hrv_rec, width="stretch")
+        st.plotly_chart(fig_hrv_rec, use_container_width=True)
 
         if df_insights["hrv_rmssd_milli"].notna().sum() > 2:
             corr_val = df_insights["hrv_rmssd_milli"].corr(
@@ -531,13 +531,13 @@ with tab5:
             df_insights,
             x="strain",
             y="resting_heart_rate",
-            trendline="lowess",
+            trendline="ols",
             title="Daily Strain vs Resting HR",
             labels={"strain": "Strain", "resting_heart_rate": "RHR (bpm)"},
             color_discrete_sequence=["#E74C3C"],
         )
         fig_strain_rhr.update_layout(margin=dict(l=0, r=0, t=30, b=0))
-        st.plotly_chart(fig_strain_rhr, width="stretch")
+        st.plotly_chart(fig_strain_rhr, use_container_width=True)
 
         if df_insights["strain"].notna().sum() > 2:
             corr_val = df_insights["strain"].corr(df_insights["resting_heart_rate"])
@@ -549,7 +549,7 @@ with tab5:
             df_insights,
             x="deep_sleep_hrs",
             y="recovery_score",
-            trendline="lowess",
+            trendline="ols",
             title="Deep Sleep vs Recovery",
             labels={
                 "deep_sleep_hrs": "Deep Sleep (hrs)",
@@ -558,7 +558,7 @@ with tab5:
             color_discrete_sequence=["#2E86AB"],
         )
         fig_deep_rec.update_layout(margin=dict(l=0, r=0, t=30, b=0))
-        st.plotly_chart(fig_deep_rec, width="stretch")
+        st.plotly_chart(fig_deep_rec, use_container_width=True)
 
         if df_insights["deep_sleep_hrs"].notna().sum() > 2:
             corr_val = df_insights["deep_sleep_hrs"].corr(df_insights["recovery_score"])
@@ -574,7 +574,7 @@ with tab5:
             ["date", "recovery_score", "sleep_hrs", "hrv_rmssd_milli"]
         ]
         best_days.columns = ["Date", "Recovery", "Sleep Hrs", "HRV"]
-        st.dataframe(best_days, hide_index=True, width="stretch")
+        st.dataframe(best_days, hide_index=True, use_container_width=True)
 
     with col6:
         st.markdown("#### Worst Recovery Days")
@@ -582,7 +582,7 @@ with tab5:
             ["date", "recovery_score", "sleep_hrs", "hrv_rmssd_milli"]
         ]
         worst_days.columns = ["Date", "Recovery", "Sleep Hrs", "HRV"]
-        st.dataframe(worst_days, hide_index=True, width="stretch")
+        st.dataframe(worst_days, hide_index=True, use_container_width=True)
 
     st.markdown("---")
     st.markdown("### Workout Impact Analysis")
@@ -689,7 +689,7 @@ with tab6:
             margin=dict(l=0, r=0, t=40, b=0),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
-        st.plotly_chart(fig_scatter_rec, width="stretch")
+        st.plotly_chart(fig_scatter_rec, use_container_width=True)
 
         st.markdown("---")
 
@@ -732,7 +732,7 @@ with tab6:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             hovermode="x unified",
         )
-        st.plotly_chart(fig_timeline_rec, width="stretch")
+        st.plotly_chart(fig_timeline_rec, use_container_width=True)
 
         st.markdown("---")
 
@@ -770,7 +770,7 @@ with tab6:
             margin=dict(l=0, r=0, t=80, b=0),
             showlegend=False,
         )
-        st.plotly_chart(fig_importance_rec, width="stretch")
+        st.plotly_chart(fig_importance_rec, use_container_width=True)
 
 with tab7:
     st.subheader("Ridge Regression: Predicting HRV")
@@ -833,7 +833,7 @@ with tab7:
             margin=dict(l=0, r=0, t=40, b=0),
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
         )
-        st.plotly_chart(fig_scatter_hrv, width="stretch")
+        st.plotly_chart(fig_scatter_hrv, use_container_width=True)
 
         st.markdown("---")
 
@@ -876,7 +876,7 @@ with tab7:
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             hovermode="x unified",
         )
-        st.plotly_chart(fig_timeline_hrv, width="stretch")
+        st.plotly_chart(fig_timeline_hrv, use_container_width=True)
 
         st.markdown("---")
 
@@ -914,7 +914,7 @@ with tab7:
             margin=dict(l=0, r=0, t=80, b=0),
             showlegend=False,
         )
-        st.plotly_chart(fig_importance_hrv, width="stretch")
+        st.plotly_chart(fig_importance_hrv, use_container_width=True)
 
 
 st.markdown("---")
