@@ -1,6 +1,8 @@
 import pandas as pd
 import numpy as np
-import statsmodels.api as sm
+from sklearn.linear_model import Ridge
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import r2_score, mean_absolute_error
 
 
 def prepare_recovery_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
@@ -45,102 +47,6 @@ def prepare_recovery_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
     ) / 3600000
 
     return df_mlr
-
-
-def fit_recovery_mlr_model(df_mlr):
-    feature_cols = [
-        "deep_sleep_hrs",
-        "rem_sleep_hrs",
-        "hrv_rmssd_milli",
-        "max_heart_rate",
-        "strain",
-        "had_workout",
-    ]
-    target_col = "recovery_score"
-
-    df_model = df_mlr[feature_cols + [target_col, "date"]].dropna()
-
-    if len(df_model) < 10:
-        return None, df_model
-
-    X = df_model[feature_cols]
-    y = df_model[target_col]
-
-    X_std = (X - X.mean()) / X.std()
-    X_std = sm.add_constant(X_std)
-
-    model = sm.OLS(y, X_std).fit()
-
-    return model, df_model
-
-
-def get_recovery_model_results(model, df_model):
-    feature_cols = [
-        "deep_sleep_hrs",
-        "rem_sleep_hrs",
-        "hrv_rmssd_milli",
-        "max_heart_rate",
-        "strain",
-        "had_workout",
-    ]
-    target_col = "recovery_score"
-
-    X = df_model[feature_cols]
-    y = df_model[target_col]
-
-    X_std = (X - X.mean()) / X.std()
-    X_std = sm.add_constant(X_std)
-
-    y_pred = model.predict(X_std)
-    residuals = y - y_pred
-
-    feature_labels = [
-        "Intercept",
-        "Deep Sleep (hrs)",
-        "REM Sleep (hrs)",
-        "HRV (ms)",
-        "Max HR (bpm)",
-        "Strain",
-        "Had Workout",
-    ]
-
-    coef_df = pd.DataFrame(
-        {
-            "Feature": feature_labels,
-            "Coefficient": model.params.values,
-            "Std Error": model.bse.values,
-            "t-value": model.tvalues.values,
-            "P-value": model.pvalues.values,
-        }
-    )
-
-    coef_df["Significant"] = coef_df["P-value"] < 0.05
-    coef_df["CI Lower"] = model.conf_int()[0].values
-    coef_df["CI Upper"] = model.conf_int()[1].values
-
-    df_resid = model.df_resid
-    partial_corrs = []
-    for i, feat in enumerate(feature_cols):
-        t_val = model.tvalues.iloc[i + 1]
-        partial_r = t_val / np.sqrt(t_val**2 + df_resid)
-        partial_corrs.append(partial_r)
-
-    partial_corr_df = pd.DataFrame(
-        {
-            "Feature": feature_labels[1:],
-            "Partial Correlation": partial_corrs,
-        }
-    )
-
-    return {
-        "model": model,
-        "y": y,
-        "y_pred": y_pred,
-        "residuals": residuals,
-        "coef_df": coef_df,
-        "partial_corr_df": partial_corr_df,
-        "n_observations": len(df_model),
-    }
 
 
 def prepare_hrv_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
@@ -221,7 +127,57 @@ def prepare_hrv_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
     return df_mlr_hrv
 
 
-def fit_hrv_mlr_model(df_mlr_hrv):
+def fit_recovery_ridge_model(df_mlr, alpha=1.0):
+    feature_cols = [
+        "deep_sleep_hrs",
+        "rem_sleep_hrs",
+        "hrv_rmssd_milli",
+        "max_heart_rate",
+        "strain",
+        "had_workout",
+    ]
+    target_col = "recovery_score"
+
+    df_model = df_mlr[feature_cols + [target_col, "date"]].dropna()
+
+    if len(df_model) < 10:
+        return None
+
+    X = df_model[feature_cols].values
+    y = df_model[target_col].values
+    dates = df_model["date"].values
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    model = Ridge(alpha=alpha)
+    model.fit(X_scaled, y)
+
+    predictions = model.predict(X_scaled)
+
+    feature_labels = [
+        "Deep Sleep (hrs)",
+        "REM Sleep (hrs)",
+        "HRV (ms)",
+        "Max HR (bpm)",
+        "Strain",
+        "Had Workout",
+    ]
+
+    return {
+        "model": model,
+        "scaler": scaler,
+        "predictions": predictions,
+        "dates": dates,
+        "actuals": y,
+        "r2": r2_score(y, predictions),
+        "mae": mean_absolute_error(y, predictions),
+        "feature_names": feature_labels,
+        "coefficients": model.coef_,
+    }
+
+
+def fit_hrv_ridge_model(df_mlr_hrv, alpha=1.0):
     core_features = [
         "deep_sleep_hrs",
         "rem_sleep_hrs",
@@ -242,43 +198,27 @@ def fit_hrv_mlr_model(df_mlr_hrv):
             if non_null_count >= 10:
                 available_optional.append(feat)
 
-    feature_cols_hrv = core_features + available_optional
-    target_col_hrv = "hrv_rmssd_milli"
+    feature_cols = core_features + available_optional
+    target_col = "hrv_rmssd_milli"
 
-    df_model_hrv = df_mlr_hrv[feature_cols_hrv + [target_col_hrv, "date"]].dropna()
+    df_model = df_mlr_hrv[feature_cols + [target_col, "date"]].dropna()
 
-    if len(df_model_hrv) < 10:
-        return None, df_model_hrv, available_optional
+    if len(df_model) < 10:
+        return None
 
-    X_hrv = df_model_hrv[feature_cols_hrv]
-    y_hrv = df_model_hrv[target_col_hrv]
+    X = df_model[feature_cols].values
+    y = df_model[target_col].values
+    dates = df_model["date"].values
 
-    X_std_hrv = (X_hrv - X_hrv.mean()) / X_hrv.std()
-    X_std_hrv = sm.add_constant(X_std_hrv)
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    model_hrv = sm.OLS(y_hrv, X_std_hrv).fit()
+    model = Ridge(alpha=alpha)
+    model.fit(X_scaled, y)
 
-    return model_hrv, df_model_hrv, available_optional
+    predictions = model.predict(X_scaled)
 
-
-def get_hrv_model_results(model, df_model_hrv, available_optional):
-    core_features = [
-        "deep_sleep_hrs",
-        "rem_sleep_hrs",
-        "total_sleep_hrs",
-        "sleep_efficiency_percentage",
-        "resting_heart_rate",
-        "respiratory_rate",
-        "workout_strain",
-        "day_strain",
-    ]
-
-    optional_features = ["spo2_percentage", "skin_temp_celsius", "disturbance_count"]
-
-    feature_cols_hrv = core_features + available_optional
-    target_col_hrv = "hrv_rmssd_milli"
-
-    feature_labels = {
+    feature_labels_map = {
         "deep_sleep_hrs": "Deep Sleep (hrs)",
         "rem_sleep_hrs": "REM Sleep (hrs)",
         "total_sleep_hrs": "Total Sleep (hrs)",
@@ -288,54 +228,20 @@ def get_hrv_model_results(model, df_model_hrv, available_optional):
         "workout_strain": "Workout Strain",
         "day_strain": "Day Strain",
         "spo2_percentage": "SpO2 (%)",
-        "skin_temp_celsius": "Skin Temp (°C)",
+        "skin_temp_celsius": "Skin Temp (C)",
         "disturbance_count": "Disturbances",
     }
 
-    X_hrv = df_model_hrv[feature_cols_hrv]
-    y_hrv = df_model_hrv[target_col_hrv]
-
-    X_std_hrv = (X_hrv - X_hrv.mean()) / X_hrv.std()
-    X_std_hrv = sm.add_constant(X_std_hrv)
-
-    y_pred_hrv = model.predict(X_std_hrv)
-    residuals_hrv = y_hrv - y_pred_hrv
-
-    coef_df_hrv = pd.DataFrame(
-        {
-            "Feature": ["Intercept"] + [feature_labels[f] for f in feature_cols_hrv],
-            "Coefficient": model.params.values,
-            "Std Error": model.bse.values,
-            "t-value": model.tvalues.values,
-            "P-value": model.pvalues.values,
-        }
-    )
-
-    coef_df_hrv["Significant"] = coef_df_hrv["P-value"] < 0.05
-    coef_df_hrv["CI Lower"] = model.conf_int()[0].values
-    coef_df_hrv["CI Upper"] = model.conf_int()[1].values
-
-    df_resid_hrv = model.df_resid
-    partial_corrs_hrv = []
-    for i, feat in enumerate(feature_cols_hrv):
-        t_val = model.tvalues.iloc[i + 1]
-        partial_r = t_val / np.sqrt(t_val**2 + df_resid_hrv)
-        partial_corrs_hrv.append(partial_r)
-
-    partial_corr_df_hrv = pd.DataFrame(
-        {
-            "Feature": [feature_labels[f] for f in feature_cols_hrv],
-            "Partial Correlation": partial_corrs_hrv,
-        }
-    )
+    feature_labels = [feature_labels_map[f] for f in feature_cols]
 
     return {
         "model": model,
-        "y": y_hrv,
-        "y_pred": y_pred_hrv,
-        "residuals": residuals_hrv,
-        "coef_df": coef_df_hrv,
-        "partial_corr_df": partial_corr_df_hrv,
-        "n_observations": len(df_model_hrv),
-        "available_optional": available_optional,
+        "scaler": scaler,
+        "predictions": predictions,
+        "dates": dates,
+        "actuals": y,
+        "r2": r2_score(y, predictions),
+        "mae": mean_absolute_error(y, predictions),
+        "feature_names": feature_labels,
+        "coefficients": model.coef_,
     }

@@ -9,11 +9,9 @@ import numpy as np
 import os
 from src.whoop_sync.mlr import (
     prepare_recovery_mlr_data,
-    fit_recovery_mlr_model,
-    get_recovery_model_results,
     prepare_hrv_mlr_data,
-    fit_hrv_mlr_model,
-    get_hrv_model_results,
+    fit_recovery_ridge_model,
+    fit_hrv_ridge_model,
 )
 
 st.set_page_config(page_title="Whoop Dashboard", layout="wide")
@@ -631,566 +629,218 @@ with tab5:
         st.info("Not enough workout data for impact analysis.")
 
 with tab6:
-    st.subheader("Multiple Linear Regression: Predicting Recovery")
+    st.subheader("Ridge Regression: Predicting Recovery")
 
     st.markdown("""
-    This model predicts **Recovery Score** using multiple physiological and behavioral features.
-    The coefficients show the **unique contribution** of each predictor when controlling for all others.
+    This model predicts **Recovery Score** using Ridge regression with standardized features.
+    The timeline below shows how well the model tracks actual recovery over time.
     """)
 
     df_mlr = prepare_recovery_mlr_data(
         cycles_filtered, recoveries_filtered, sleeps_filtered, workouts_filtered
     )
-    model, df_model = fit_recovery_mlr_model(df_mlr)
 
-    if model is None:
-        st.warning(
-            f"Not enough data for MLR model. Need at least 10 complete observations, have {len(df_model)}."
-        )
+    ridge_rec = fit_recovery_ridge_model(df_mlr)
+
+    if ridge_rec is None:
+        st.warning("Not enough data for Ridge model. Need at least 10 complete observations.")
     else:
-        results = get_recovery_model_results(model, df_model)
-        model = results["model"]
-        y = results["y"]
-        y_pred = results["y_pred"]
-        residuals = results["residuals"]
-        coef_df = results["coef_df"]
-        partial_corr_df = results["partial_corr_df"]
-
-        st.markdown(f"**Sample Size:** {results['n_observations']} observations")
-
-        col_metrics1, col_metrics2, col_metrics3, col_metrics4 = st.columns(4)
-        with col_metrics1:
-            st.metric("R²", f"{model.rsquared:.3f}")
-        with col_metrics2:
-            st.metric("Adj. R²", f"{model.rsquared_adj:.3f}")
-        with col_metrics3:
-            st.metric("F-statistic", f"{model.fvalue:.2f}")
-        with col_metrics4:
-            st.metric("Prob (F-stat)", f"{model.f_pvalue:.4f}")
+        # Model stats
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            st.metric("R²", f"{ridge_rec['r2']:.3f}")
+        with col_m2:
+            st.metric("MAE", f"{ridge_rec['mae']:.2f}")
+        with col_m3:
+            st.metric("Observations", f"{len(ridge_rec['actuals'])}")
 
         st.markdown("---")
 
-        st.markdown("### Model Coefficients (Standardized)")
-        st.markdown("""
-        Standardized coefficients allow comparison of relative importance across predictors.
-        A positive coefficient means higher values of that predictor are associated with **higher recovery**,
-        controlling for all other variables.
-        """)
+        # Timeline plot
+        st.markdown("### Predicted vs Actual Recovery Over Time")
 
-        coef_plot_df = coef_df[coef_df["Feature"] != "Intercept"].copy()
+        sorted_idx = np.argsort(ridge_rec["dates"])
+        sorted_dates = ridge_rec["dates"][sorted_idx]
+        sorted_actuals = ridge_rec["actuals"][sorted_idx]
+        sorted_preds = ridge_rec["predictions"][sorted_idx]
 
-        fig_coef = go.Figure()
-
-        colors = coef_plot_df.apply(
-            lambda row: "#27AE60"
-            if row["Coefficient"] > 0 and row["Significant"]
-            else "#E74C3C"
-            if row["Coefficient"] < 0 and row["Significant"]
-            else "#95A5A6",
-            axis=1,
+        fig_timeline_rec = go.Figure()
+        fig_timeline_rec.add_trace(
+            go.Scatter(
+                x=sorted_dates,
+                y=sorted_actuals,
+                mode="lines+markers",
+                name="Actual",
+                line=dict(color="#3498DB", width=2),
+                marker=dict(size=5),
+            )
         )
-
-        fig_coef.add_trace(
-            go.Bar(
-                x=coef_plot_df["Feature"],
-                y=coef_plot_df["Coefficient"],
-                error_y=dict(
-                    type="data",
-                    symmetric=False,
-                    array=coef_plot_df["CI Upper"] - coef_plot_df["Coefficient"],
-                    arrayminus=coef_plot_df["Coefficient"] - coef_plot_df["CI Lower"],
-                    color="#7F8C8D",
-                ),
-                marker_color=colors,
-                text=coef_plot_df["Coefficient"].round(2),
-                textposition="outside",
+        fig_timeline_rec.add_trace(
+            go.Scatter(
+                x=sorted_dates,
+                y=sorted_preds,
+                mode="lines+markers",
+                name="Predicted",
+                line=dict(color="#E74C3C", width=2, dash="dash"),
+                marker=dict(size=5),
             )
         )
 
-        fig_coef.add_hline(y=0, line_dash="dash", line_color="#7F8C8D", opacity=0.5)
-
-        fig_coef.update_layout(
-            title="Standardized Coefficients with 95% CI<br><sub>Green = Significant positive effect | Red = Significant negative effect | Gray = Not significant</sub>",
-            xaxis_title="Predictor",
-            yaxis_title="Effect on Recovery Score",
-            height=450,
-            margin=dict(l=0, r=0, t=80, b=0),
-            showlegend=False,
+        fig_timeline_rec.update_layout(
+            title=f"Recovery Score: Actual vs Predicted (R² = {ridge_rec['r2']:.3f}, MAE = {ridge_rec['mae']:.2f})",
+            xaxis_title="Date",
+            yaxis_title="Recovery Score",
+            height=500,
+            margin=dict(l=0, r=0, t=50, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            hovermode="x unified",
         )
-        st.plotly_chart(fig_coef, width="stretch")
+        st.plotly_chart(fig_timeline_rec, width="stretch")
 
         st.markdown("---")
 
-        col_left, col_right = st.columns(2)
+        # Feature importance - horizontal bar chart
+        st.markdown("### Feature Importance (Ridge Coefficients, Standardized)")
 
-        with col_left:
-            st.markdown("### Actual vs Predicted")
+        coef_df_ridge = pd.DataFrame({
+            "Feature": ridge_rec["feature_names"],
+            "Coefficient": ridge_rec["coefficients"],
+        }).sort_values("Coefficient", key=abs, ascending=True)
 
-            fig_pred = go.Figure()
-
-            fig_pred.add_trace(
-                go.Scatter(
-                    x=y,
-                    y=y_pred,
-                    mode="markers",
-                    marker=dict(color="#3498DB", size=8, opacity=0.7),
-                    name="Observations",
-                    hovertemplate="Actual: %{x:.0f}<br>Predicted: %{y:.0f}<extra></extra>",
-                )
-            )
-
-            min_val = min(y.min(), y_pred.min())
-            max_val = max(y.max(), y_pred.max())
-            fig_pred.add_trace(
-                go.Scatter(
-                    x=[min_val, max_val],
-                    y=[min_val, max_val],
-                    mode="lines",
-                    line=dict(color="#E74C3C", dash="dash"),
-                    name="Perfect Fit",
-                )
-            )
-
-            fig_pred.update_layout(
-                title=f"Model Fit (R² = {model.rsquared:.3f})",
-                xaxis_title="Actual Recovery Score",
-                yaxis_title="Predicted Recovery Score",
-                height=400,
-                margin=dict(l=0, r=0, t=40, b=0),
-                showlegend=True,
-                legend=dict(
-                    orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-                ),
-            )
-            st.plotly_chart(fig_pred, width="stretch")
-
-        with col_right:
-            st.markdown("### Residuals Distribution")
-
-            fig_resid = go.Figure()
-
-            fig_resid.add_trace(
-                go.Histogram(
-                    x=residuals,
-                    nbinsx=20,
-                    marker_color="#9B59B6",
-                    opacity=0.7,
-                    name="Residuals",
-                )
-            )
-
-            fig_resid.add_vline(x=0, line_dash="dash", line_color="#E74C3C")
-
-            fig_resid.update_layout(
-                title=f"Residuals (Mean = {residuals.mean():.2f}, SD = {residuals.std():.2f})",
-                xaxis_title="Residual (Actual - Predicted)",
-                yaxis_title="Frequency",
-                height=400,
-                margin=dict(l=0, r=0, t=40, b=0),
-                showlegend=False,
-            )
-            st.plotly_chart(fig_resid, width="stretch")
-
-        st.markdown("---")
-
-        st.markdown("### Detailed Coefficient Table")
-
-        display_coef = coef_df.copy()
-        display_coef["P-value"] = display_coef["P-value"].apply(
-            lambda x: f"{x:.4f}" + (" *" if x < 0.05 else "")
-        )
-        display_coef["Coefficient"] = display_coef["Coefficient"].round(3)
-        display_coef["Std Error"] = display_coef["Std Error"].round(3)
-        display_coef["t-value"] = display_coef["t-value"].round(2)
-
-        st.dataframe(
-            display_coef[["Feature", "Coefficient", "Std Error", "t-value", "P-value"]],
-            width="stretch",
-            hide_index=True,
-        )
-
-        st.markdown(
-            "<sub>* p < 0.05 (statistically significant)</sub>", unsafe_allow_html=True
-        )
-
-        st.markdown("---")
-
-        st.markdown("### 💡 Key Insights")
-
-        insights = []
-        sig_coefs = coef_df[
-            (coef_df["Significant"]) & (coef_df["Feature"] != "Intercept")
-        ]
-
-        for _, row in sig_coefs.iterrows():
-            direction = "increases" if row["Coefficient"] > 0 else "decreases"
-            effect_size = abs(row["Coefficient"])
-            if effect_size > 5:
-                magnitude = "strongly"
-            elif effect_size > 2:
-                magnitude = "moderately"
-            else:
-                magnitude = "slightly"
-
-            insights.append(
-                f"- **{row['Feature']}** {magnitude} {direction} recovery (β = {row['Coefficient']:.2f}, p = {row['P-value']:.4f})"
-            )
-
-        if insights:
-            for insight in insights:
-                st.markdown(insight)
-        else:
-            st.info("No predictors reached statistical significance at p < 0.05 level.")
-
-        st.markdown("---")
-
-        st.markdown("### Partial Correlations (Controlling for Other Features)")
-
-        st.markdown("""
-        Partial correlations show the unique relationship between each predictor and recovery, 
-        **after removing the effects of all other predictors**. This is different from simple correlations 
-        which don't account for confounding variables.
-        """)
-
-        colors_partial = partial_corr_df["Partial Correlation"].apply(
+        colors_ridge = coef_df_ridge["Coefficient"].apply(
             lambda x: "#27AE60" if x > 0 else "#E74C3C"
         )
 
-        fig_partial = go.Figure()
-        fig_partial.add_trace(
+        fig_importance_rec = go.Figure()
+        fig_importance_rec.add_trace(
             go.Bar(
-                x=partial_corr_df["Feature"],
-                y=partial_corr_df["Partial Correlation"],
-                marker_color=colors_partial,
-                text=partial_corr_df["Partial Correlation"].round(2),
+                x=coef_df_ridge["Coefficient"],
+                y=coef_df_ridge["Feature"],
+                orientation="h",
+                marker_color=colors_ridge,
+                text=coef_df_ridge["Coefficient"].round(2),
                 textposition="outside",
             )
         )
 
-        fig_partial.add_hline(y=0, line_dash="dash", line_color="#7F8C8D", opacity=0.5)
+        fig_importance_rec.add_vline(x=0, line_dash="dash", line_color="#7F8C8D", opacity=0.5)
 
-        fig_partial.update_layout(
-            title="Partial Correlations: Unique Contribution of Each Predictor",
-            xaxis_title="Predictor",
-            yaxis_title="Partial Correlation",
+        fig_importance_rec.update_layout(
+            title="Standardized Ridge Coefficients<br><sub>Green = positive effect | Red = negative effect</sub>",
+            xaxis_title="Effect on Recovery Score",
+            yaxis_title="",
             height=400,
-            margin=dict(l=0, r=0, t=50, b=0),
+            margin=dict(l=0, r=0, t=80, b=0),
             showlegend=False,
-            yaxis_range=[-1, 1],
         )
-        st.plotly_chart(fig_partial, width="stretch")
-
-        col_partial1, col_partial2 = st.columns(2)
-        with col_partial1:
-            st.markdown("**Interpretation:**")
-            st.markdown("""
-            - **Positive values**: Higher predictor → Higher recovery (controlling for others)
-            - **Negative values**: Higher predictor → Lower recovery (controlling for others)
-            - **Magnitude**: Strength of unique relationship
-            """)
-        with col_partial2:
-            st.markdown("**Top Contributors:**")
-            top_predictors = partial_corr_df.reindex(
-                partial_corr_df["Partial Correlation"]
-                .abs()
-                .sort_values(ascending=False)
-                .index
-            ).head(3)
-            for _, row in top_predictors.iterrows():
-                st.markdown(f"- **{row['Feature']}**: {row['Partial Correlation']:.2f}")
+        st.plotly_chart(fig_importance_rec, width="stretch")
 
 with tab7:
-    st.subheader("Multiple Linear Regression: Predicting HRV")
+    st.subheader("Ridge Regression: Predicting HRV")
 
     st.markdown("""
-    This model predicts **HRV (Heart Rate Variability)** using multiple physiological and behavioral features.
-    HRV is a key indicator of autonomic nervous system function and recovery capacity.
+    This model predicts **HRV (Heart Rate Variability)** using Ridge regression with standardized features.
+    The timeline below shows how well the model tracks actual HRV over time.
     """)
 
     df_mlr_hrv = prepare_hrv_mlr_data(
         cycles_filtered, recoveries_filtered, sleeps_filtered, workouts_filtered
     )
-    model_hrv, df_model_hrv, available_optional = fit_hrv_mlr_model(df_mlr_hrv)
 
-    if available_optional:
-        feature_labels = {
-            "deep_sleep_hrs": "Deep Sleep (hrs)",
-            "rem_sleep_hrs": "REM Sleep (hrs)",
-            "total_sleep_hrs": "Total Sleep (hrs)",
-            "sleep_efficiency_percentage": "Sleep Efficiency (%)",
-            "resting_heart_rate": "Resting HR (bpm)",
-            "respiratory_rate": "Respiratory Rate",
-            "workout_strain": "Workout Strain",
-            "day_strain": "Day Strain",
-            "spo2_percentage": "SpO2 (%)",
-            "skin_temp_celsius": "Skin Temp (°C)",
-            "disturbance_count": "Disturbances",
-        }
-        st.caption(
-            f"Optional predictors included: {', '.join([feature_labels[f] for f in available_optional])}"
-        )
+    ridge_hrv = fit_hrv_ridge_model(df_mlr_hrv)
 
-    if model_hrv is None:
-        st.warning(
-            f"Not enough data for MLR model. Need at least 10 complete observations, have {len(df_model_hrv)}."
-        )
+    if ridge_hrv is None:
+        st.warning("Not enough data for Ridge model. Need at least 10 complete observations.")
     else:
-        results = get_hrv_model_results(model_hrv, df_model_hrv, available_optional)
-        model_hrv = results["model"]
-        y_hrv = results["y"]
-        y_pred_hrv = results["y_pred"]
-        residuals_hrv = results["residuals"]
-        coef_df_hrv = results["coef_df"]
-        partial_corr_df_hrv = results["partial_corr_df"]
-
-        st.markdown(f"**Sample Size:** {results['n_observations']} observations")
-
-        col_metrics1, col_metrics2, col_metrics3, col_metrics4 = st.columns(4)
-        with col_metrics1:
-            st.metric("R²", f"{model_hrv.rsquared:.3f}")
-        with col_metrics2:
-            st.metric("Adj. R²", f"{model_hrv.rsquared_adj:.3f}")
-        with col_metrics3:
-            st.metric("F-statistic", f"{model_hrv.fvalue:.2f}")
-        with col_metrics4:
-            st.metric("Prob (F-stat)", f"{model_hrv.f_pvalue:.4f}")
+        # Model stats
+        col_m1, col_m2, col_m3 = st.columns(3)
+        with col_m1:
+            st.metric("R²", f"{ridge_hrv['r2']:.3f}")
+        with col_m2:
+            st.metric("MAE", f"{ridge_hrv['mae']:.2f}")
+        with col_m3:
+            st.metric("Observations", f"{len(ridge_hrv['actuals'])}")
 
         st.markdown("---")
 
-        st.markdown("### Model Coefficients (Standardized)")
-        st.markdown("""
-        Standardized coefficients allow comparison of relative importance across predictors.
-        A positive coefficient means higher values of that predictor are associated with **higher HRV**,
-        controlling for all other variables.
-        """)
+        # Timeline plot
+        st.markdown("### Predicted vs Actual HRV Over Time")
 
-        coef_plot_df_hrv = coef_df_hrv[coef_df_hrv["Feature"] != "Intercept"].copy()
+        sorted_idx_hrv = np.argsort(ridge_hrv["dates"])
+        sorted_dates_hrv = ridge_hrv["dates"][sorted_idx_hrv]
+        sorted_actuals_hrv = ridge_hrv["actuals"][sorted_idx_hrv]
+        sorted_preds_hrv = ridge_hrv["predictions"][sorted_idx_hrv]
 
-        fig_coef_hrv = go.Figure()
-
-        colors_hrv = coef_plot_df_hrv.apply(
-            lambda row: "#27AE60"
-            if row["Coefficient"] > 0 and row["Significant"]
-            else "#E74C3C"
-            if row["Coefficient"] < 0 and row["Significant"]
-            else "#95A5A6",
-            axis=1,
+        fig_timeline_hrv = go.Figure()
+        fig_timeline_hrv.add_trace(
+            go.Scatter(
+                x=sorted_dates_hrv,
+                y=sorted_actuals_hrv,
+                mode="lines+markers",
+                name="Actual",
+                line=dict(color="#3498DB", width=2),
+                marker=dict(size=5),
+            )
+        )
+        fig_timeline_hrv.add_trace(
+            go.Scatter(
+                x=sorted_dates_hrv,
+                y=sorted_preds_hrv,
+                mode="lines+markers",
+                name="Predicted",
+                line=dict(color="#E74C3C", width=2, dash="dash"),
+                marker=dict(size=5),
+            )
         )
 
-        fig_coef_hrv.add_trace(
+        fig_timeline_hrv.update_layout(
+            title=f"HRV (ms): Actual vs Predicted (R² = {ridge_hrv['r2']:.3f}, MAE = {ridge_hrv['mae']:.2f})",
+            xaxis_title="Date",
+            yaxis_title="HRV (ms)",
+            height=500,
+            margin=dict(l=0, r=0, t=50, b=0),
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            hovermode="x unified",
+        )
+        st.plotly_chart(fig_timeline_hrv, width="stretch")
+
+        st.markdown("---")
+
+        # Feature importance - horizontal bar chart
+        st.markdown("### Feature Importance (Ridge Coefficients, Standardized)")
+
+        coef_df_ridge_hrv = pd.DataFrame({
+            "Feature": ridge_hrv["feature_names"],
+            "Coefficient": ridge_hrv["coefficients"],
+        }).sort_values("Coefficient", key=abs, ascending=True)
+
+        colors_ridge_hrv = coef_df_ridge_hrv["Coefficient"].apply(
+            lambda x: "#27AE60" if x > 0 else "#E74C3C"
+        )
+
+        fig_importance_hrv = go.Figure()
+        fig_importance_hrv.add_trace(
             go.Bar(
-                x=coef_plot_df_hrv["Feature"],
-                y=coef_plot_df_hrv["Coefficient"],
-                error_y=dict(
-                    type="data",
-                    symmetric=False,
-                    array=coef_plot_df_hrv["CI Upper"]
-                    - coef_plot_df_hrv["Coefficient"],
-                    arrayminus=coef_plot_df_hrv["Coefficient"]
-                    - coef_plot_df_hrv["CI Lower"],
-                    color="#7F8C8D",
-                ),
-                marker_color=colors_hrv,
-                text=coef_plot_df_hrv["Coefficient"].round(2),
+                x=coef_df_ridge_hrv["Coefficient"],
+                y=coef_df_ridge_hrv["Feature"],
+                orientation="h",
+                marker_color=colors_ridge_hrv,
+                text=coef_df_ridge_hrv["Coefficient"].round(2),
                 textposition="outside",
             )
         )
 
-        fig_coef_hrv.add_hline(y=0, line_dash="dash", line_color="#7F8C8D", opacity=0.5)
+        fig_importance_hrv.add_vline(x=0, line_dash="dash", line_color="#7F8C8D", opacity=0.5)
 
-        fig_coef_hrv.update_layout(
-            title="Standardized Coefficients with 95% CI<br><sub>Green = Significant positive effect | Red = Significant negative effect | Gray = Not significant</sub>",
-            xaxis_title="Predictor",
-            yaxis_title="Effect on HRV (ms)",
+        fig_importance_hrv.update_layout(
+            title="Standardized Ridge Coefficients<br><sub>Green = positive effect | Red = negative effect</sub>",
+            xaxis_title="Effect on HRV (ms)",
+            yaxis_title="",
             height=450,
             margin=dict(l=0, r=0, t=80, b=0),
             showlegend=False,
         )
-        st.plotly_chart(fig_coef_hrv, width="stretch")
-
-        st.markdown("---")
-
-        col_left_hrv, col_right_hrv = st.columns(2)
-
-        with col_left_hrv:
-            st.markdown("### Actual vs Predicted")
-
-            fig_pred_hrv = go.Figure()
-
-            fig_pred_hrv.add_trace(
-                go.Scatter(
-                    x=y_hrv,
-                    y=y_pred_hrv,
-                    mode="markers",
-                    marker=dict(color="#9B59B6", size=8, opacity=0.7),
-                    name="Observations",
-                    hovertemplate="Actual: %{x:.1f}<br>Predicted: %{y:.1f}<extra></extra>",
-                )
-            )
-
-            min_val_hrv = min(y_hrv.min(), y_pred_hrv.min())
-            max_val_hrv = max(y_hrv.max(), y_pred_hrv.max())
-            fig_pred_hrv.add_trace(
-                go.Scatter(
-                    x=[min_val_hrv, max_val_hrv],
-                    y=[min_val_hrv, max_val_hrv],
-                    mode="lines",
-                    line=dict(color="#E74C3C", dash="dash"),
-                    name="Perfect Fit",
-                )
-            )
-
-            fig_pred_hrv.update_layout(
-                title=f"Model Fit (R² = {model_hrv.rsquared:.3f})",
-                xaxis_title="Actual HRV (ms)",
-                yaxis_title="Predicted HRV (ms)",
-                height=400,
-                margin=dict(l=0, r=0, t=40, b=0),
-                showlegend=True,
-                legend=dict(
-                    orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-                ),
-            )
-            st.plotly_chart(fig_pred_hrv, width="stretch")
-
-        with col_right_hrv:
-            st.markdown("### Residuals Distribution")
-
-            fig_resid_hrv = go.Figure()
-
-            fig_resid_hrv.add_trace(
-                go.Histogram(
-                    x=residuals_hrv,
-                    nbinsx=20,
-                    marker_color="#3498DB",
-                    opacity=0.7,
-                    name="Residuals",
-                )
-            )
-
-            fig_resid_hrv.add_vline(x=0, line_dash="dash", line_color="#E74C3C")
-
-            fig_resid_hrv.update_layout(
-                title=f"Residuals (Mean = {residuals_hrv.mean():.2f}, SD = {residuals_hrv.std():.2f})",
-                xaxis_title="Residual (Actual - Predicted)",
-                yaxis_title="Frequency",
-                height=400,
-                margin=dict(l=0, r=0, t=40, b=0),
-                showlegend=False,
-            )
-            st.plotly_chart(fig_resid_hrv, width="stretch")
-
-        st.markdown("---")
-
-        st.markdown("### Detailed Coefficient Table")
-
-        display_coef_hrv = coef_df_hrv.copy()
-        display_coef_hrv["P-value"] = display_coef_hrv["P-value"].apply(
-            lambda x: f"{x:.4f}" + (" *" if x < 0.05 else "")
-        )
-        display_coef_hrv["Coefficient"] = display_coef_hrv["Coefficient"].round(3)
-        display_coef_hrv["Std Error"] = display_coef_hrv["Std Error"].round(3)
-        display_coef_hrv["t-value"] = display_coef_hrv["t-value"].round(2)
-
-        st.dataframe(
-            display_coef_hrv[
-                ["Feature", "Coefficient", "Std Error", "t-value", "P-value"]
-            ],
-            width="stretch",
-            hide_index=True,
-        )
-
-        st.markdown(
-            "<sub>* p < 0.05 (statistically significant)</sub>", unsafe_allow_html=True
-        )
-
-        st.markdown("---")
-
-        st.markdown("### 💡 Key Insights")
-
-        insights_hrv = []
-        sig_coefs_hrv = coef_df_hrv[
-            (coef_df_hrv["Significant"]) & (coef_df_hrv["Feature"] != "Intercept")
-        ]
-
-        for _, row in sig_coefs_hrv.iterrows():
-            direction = "increases" if row["Coefficient"] > 0 else "decreases"
-            effect_size = abs(row["Coefficient"])
-            if effect_size > 3:
-                magnitude = "strongly"
-            elif effect_size > 1:
-                magnitude = "moderately"
-            else:
-                magnitude = "slightly"
-
-            insights_hrv.append(
-                f"- **{row['Feature']}** {magnitude} {direction} HRV (β = {row['Coefficient']:.2f}, p = {row['P-value']:.4f})"
-            )
-
-        if insights_hrv:
-            for insight in insights_hrv:
-                st.markdown(insight)
-        else:
-            st.info("No predictors reached statistical significance at p < 0.05 level.")
-
-        st.markdown("---")
-
-        st.markdown("### Partial Correlations (Controlling for Other Features)")
-
-        st.markdown("""
-        Partial correlations show the unique relationship between each predictor and HRV, 
-        **after removing the effects of all other predictors**. This is different from simple correlations 
-        which don't account for confounding variables.
-        """)
-
-        colors_partial_hrv = partial_corr_df_hrv["Partial Correlation"].apply(
-            lambda x: "#27AE60" if x > 0 else "#E74C3C"
-        )
-
-        fig_partial_hrv = go.Figure()
-        fig_partial_hrv.add_trace(
-            go.Bar(
-                x=partial_corr_df_hrv["Feature"],
-                y=partial_corr_df_hrv["Partial Correlation"],
-                marker_color=colors_partial_hrv,
-                text=partial_corr_df_hrv["Partial Correlation"].round(2),
-                textposition="outside",
-            )
-        )
-
-        fig_partial_hrv.add_hline(
-            y=0, line_dash="dash", line_color="#7F8C8D", opacity=0.5
-        )
-
-        fig_partial_hrv.update_layout(
-            title="Partial Correlations: Unique Contribution of Each Predictor",
-            xaxis_title="Predictor",
-            yaxis_title="Partial Correlation",
-            height=400,
-            margin=dict(l=0, r=0, t=50, b=0),
-            showlegend=False,
-            yaxis_range=[-1, 1],
-        )
-        st.plotly_chart(fig_partial_hrv, width="stretch")
-
-        col_partial1_hrv, col_partial2_hrv = st.columns(2)
-        with col_partial1_hrv:
-            st.markdown("**Interpretation:**")
-            st.markdown("""
-            - **Positive values**: Higher predictor → Higher HRV (controlling for others)
-            - **Negative values**: Higher predictor → Lower HRV (controlling for others)
-            - **Magnitude**: Strength of unique relationship
-            """)
-        with col_partial2_hrv:
-            st.markdown("**Top Contributors:**")
-            top_predictors_hrv = partial_corr_df_hrv.reindex(
-                partial_corr_df_hrv["Partial Correlation"]
-                .abs()
-                .sort_values(ascending=False)
-                .index
-            ).head(3)
-            for _, row in top_predictors_hrv.iterrows():
-                st.markdown(f"- **{row['Feature']}**: {row['Partial Correlation']:.2f}")
+        st.plotly_chart(fig_importance_hrv, width="stretch")
 
 
 st.markdown("---")

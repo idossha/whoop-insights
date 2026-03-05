@@ -1,1 +1,3 @@
+# Whoop daily sync (default schedule, overridden at runtime by entrypoint.sh)
 0 11 * * * cd /app && python main.py sync >> /var/log/whoop-sync.log 2>&1
+

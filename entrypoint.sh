@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SYNC_HOUR=${SYNC_HOUR:-6}
+SYNC_HOUR=${SYNC_HOUR:-11}
 SYNC_MINUTE=${SYNC_MINUTE:-0}
 TOKENS_FILE=${WHOOP_TOKENS_FILE:-/app/data/tokens.json}
 
@@ -13,13 +13,23 @@ echo "Timezone: ${TZ:-UTC}"
 echo "Tokens file: $TOKENS_FILE"
 echo "========================================"
 
-mkdir -p /var/log
+# Export all environment variables so cron can source them.
+# Cron runs in a minimal environment and does NOT inherit container env vars.
+env | grep -v -E '^(HOSTNAME|TERM|SHLVL|_)=' > /app/.env.cron 2>/dev/null || true
 
-echo "$SYNC_MINUTE $SYNC_HOUR * * * cd /app && python main.py sync >> /var/log/whoop-sync.log 2>&1" > /etc/cron.d/whoop-cron
+# Build cron job. Output goes to Docker stdout/stderr via /proc/1/fd/*.
+cat > /etc/cron.d/whoop-cron <<CRON_EOF
+${SYNC_MINUTE} ${SYNC_HOUR} * * * root cd /app && set -a && . /app/.env.cron && set +a && PYTHONPATH=/app python main.py sync >> /proc/1/fd/1 2>> /proc/1/fd/2
+CRON_EOF
 chmod 0644 /etc/cron.d/whoop-cron
 crontab /etc/cron.d/whoop-cron
 
-service cron start
+# Start cron daemon
+cron
+
+echo "Cron daemon started. Verifying..."
+crontab -l
+echo "========================================"
 
 echo ""
 echo "Checking authentication status..."
