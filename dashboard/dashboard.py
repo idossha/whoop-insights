@@ -486,18 +486,43 @@ with tab5:
 
     st.markdown("### Key Relationships")
 
+    def _add_ols_line(fig, x_vals, y_vals):
+        mask = np.isfinite(x_vals) & np.isfinite(y_vals)
+        if mask.sum() > 1:
+            x_clean, y_clean = x_vals[mask], y_vals[mask]
+            coeffs = np.polyfit(x_clean, y_clean, 1)
+            x_sorted = np.sort(x_clean)
+            fig.add_trace(
+                go.Scatter(
+                    x=x_sorted,
+                    y=np.polyval(coeffs, x_sorted),
+                    mode="lines",
+                    line=dict(dash="dash", width=2),
+                    name="Trend",
+                    showlegend=False,
+                )
+            )
+
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("#### Sleep vs Next Day Recovery")
-        fig_sleep_rec = px.scatter(
-            df_insights,
-            x="sleep_hrs",
-            y="recovery_score",
-            trendline="ols",
-            title="Sleep Hours vs Recovery Score",
-            labels={"sleep_hrs": "Sleep (hours)", "recovery_score": "Recovery (%)"},
+        fig_sleep_rec = go.Figure()
+        fig_sleep_rec.add_trace(
+            go.Scatter(
+                x=df_insights["sleep_hrs"],
+                y=df_insights["recovery_score"],
+                mode="markers",
+                marker=dict(opacity=0.7),
+                name="Data",
+            )
         )
-        fig_sleep_rec.update_layout(margin=dict(l=0, r=0, t=30, b=0))
+        _add_ols_line(fig_sleep_rec, df_insights["sleep_hrs"].values, df_insights["recovery_score"].values)
+        fig_sleep_rec.update_layout(
+            title="Sleep Hours vs Recovery Score",
+            xaxis_title="Sleep (hours)",
+            yaxis_title="Recovery (%)",
+            margin=dict(l=0, r=0, t=30, b=0),
+        )
         st.plotly_chart(fig_sleep_rec, use_container_width=True)
 
         if df_insights["sleep_hrs"].notna().sum() > 2:
@@ -506,16 +531,23 @@ with tab5:
 
     with col2:
         st.markdown("#### HRV vs Recovery")
-        fig_hrv_rec = px.scatter(
-            df_insights,
-            x="hrv_rmssd_milli",
-            y="recovery_score",
-            trendline="ols",
-            title="HRV vs Recovery Score",
-            labels={"hrv_rmssd_milli": "HRV (ms)", "recovery_score": "Recovery (%)"},
-            color_discrete_sequence=["#9B59B6"],
+        fig_hrv_rec = go.Figure()
+        fig_hrv_rec.add_trace(
+            go.Scatter(
+                x=df_insights["hrv_rmssd_milli"],
+                y=df_insights["recovery_score"],
+                mode="markers",
+                marker=dict(color="#9B59B6", opacity=0.7),
+                name="Data",
+            )
         )
-        fig_hrv_rec.update_layout(margin=dict(l=0, r=0, t=30, b=0))
+        _add_ols_line(fig_hrv_rec, df_insights["hrv_rmssd_milli"].values, df_insights["recovery_score"].values)
+        fig_hrv_rec.update_layout(
+            title="HRV vs Recovery Score",
+            xaxis_title="HRV (ms)",
+            yaxis_title="Recovery (%)",
+            margin=dict(l=0, r=0, t=30, b=0),
+        )
         st.plotly_chart(fig_hrv_rec, use_container_width=True)
 
         if df_insights["hrv_rmssd_milli"].notna().sum() > 2:
@@ -527,16 +559,23 @@ with tab5:
     col3, col4 = st.columns(2)
     with col3:
         st.markdown("#### Strain vs RHR")
-        fig_strain_rhr = px.scatter(
-            df_insights,
-            x="strain",
-            y="resting_heart_rate",
-            trendline="ols",
-            title="Daily Strain vs Resting HR",
-            labels={"strain": "Strain", "resting_heart_rate": "RHR (bpm)"},
-            color_discrete_sequence=["#E74C3C"],
+        fig_strain_rhr = go.Figure()
+        fig_strain_rhr.add_trace(
+            go.Scatter(
+                x=df_insights["strain"],
+                y=df_insights["resting_heart_rate"],
+                mode="markers",
+                marker=dict(color="#E74C3C", opacity=0.7),
+                name="Data",
+            )
         )
-        fig_strain_rhr.update_layout(margin=dict(l=0, r=0, t=30, b=0))
+        _add_ols_line(fig_strain_rhr, df_insights["strain"].values, df_insights["resting_heart_rate"].values)
+        fig_strain_rhr.update_layout(
+            title="Daily Strain vs Resting HR",
+            xaxis_title="Strain",
+            yaxis_title="RHR (bpm)",
+            margin=dict(l=0, r=0, t=30, b=0),
+        )
         st.plotly_chart(fig_strain_rhr, use_container_width=True)
 
         if df_insights["strain"].notna().sum() > 2:
@@ -545,19 +584,23 @@ with tab5:
 
     with col4:
         st.markdown("#### Deep Sleep vs Recovery")
-        fig_deep_rec = px.scatter(
-            df_insights,
-            x="deep_sleep_hrs",
-            y="recovery_score",
-            trendline="ols",
-            title="Deep Sleep vs Recovery",
-            labels={
-                "deep_sleep_hrs": "Deep Sleep (hrs)",
-                "recovery_score": "Recovery (%)",
-            },
-            color_discrete_sequence=["#2E86AB"],
+        fig_deep_rec = go.Figure()
+        fig_deep_rec.add_trace(
+            go.Scatter(
+                x=df_insights["deep_sleep_hrs"],
+                y=df_insights["recovery_score"],
+                mode="markers",
+                marker=dict(color="#2E86AB", opacity=0.7),
+                name="Data",
+            )
         )
-        fig_deep_rec.update_layout(margin=dict(l=0, r=0, t=30, b=0))
+        _add_ols_line(fig_deep_rec, df_insights["deep_sleep_hrs"].values, df_insights["recovery_score"].values)
+        fig_deep_rec.update_layout(
+            title="Deep Sleep vs Recovery",
+            xaxis_title="Deep Sleep (hrs)",
+            yaxis_title="Recovery (%)",
+            margin=dict(l=0, r=0, t=30, b=0),
+        )
         st.plotly_chart(fig_deep_rec, use_container_width=True)
 
         if df_insights["deep_sleep_hrs"].notna().sum() > 2:
