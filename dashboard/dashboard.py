@@ -927,24 +927,24 @@ table_select = st.selectbox(
 if table_select == "Cycles":
     st.dataframe(
         cycles_filtered.sort_values("date", ascending=False),
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
     )
 elif table_select == "Recoveries":
     st.dataframe(
         recoveries_filtered.sort_values("updated_at", ascending=False),
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
     )
 elif table_select == "Sleeps":
     st.dataframe(
         sleeps_filtered.sort_values("date", ascending=False),
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
     )
 elif table_select == "Workouts":
     st.dataframe(
         workouts_filtered.sort_values("date", ascending=False),
-        width="stretch",
+        use_container_width=True,
         hide_index=True,
     )
