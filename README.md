@@ -3,7 +3,7 @@
 Automated data pipeline, predictive modeling, and interactive dashboard for personal WHOOP wearable data.
 
 
-[mlr showing predicated and actual recoveries over time](docs/recovery-timeline.png)
+![mlr showing predicated and actual recoveries over time](docs/recovery-timeline.png)
 
 ---
 
