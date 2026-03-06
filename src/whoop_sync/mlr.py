@@ -6,6 +6,7 @@ from sklearn.metrics import r2_score, mean_absolute_error
 
 
 def prepare_recovery_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
+    main_sleeps = sleeps_df[sleeps_df["nap"] == 0]
     df_mlr = (
         cycles_df[["date", "strain", "id", "max_heart_rate"]]
         .merge(
@@ -17,7 +18,7 @@ def prepare_recovery_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
             how="inner",
         )
         .merge(
-            sleeps_df[
+            main_sleeps[
                 [
                     "cycle_id",
                     "total_slow_wave_sleep_time_milli",
@@ -50,6 +51,7 @@ def prepare_recovery_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
 
 
 def prepare_hrv_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
+    main_sleeps = sleeps_df[sleeps_df["nap"] == 0]
     df_mlr_hrv = (
         cycles_df[
             [
@@ -77,7 +79,7 @@ def prepare_hrv_mlr_data(cycles_df, recoveries_df, sleeps_df, workouts_df):
             how="inner",
         )
         .merge(
-            sleeps_df[
+            main_sleeps[
                 [
                     "cycle_id",
                     "total_slow_wave_sleep_time_milli",
