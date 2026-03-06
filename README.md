@@ -127,6 +127,17 @@ whoop_insights/
 
 ---
 
+## To Be Added
+
+The current modeling layer is intentionally inferential — the goal is understanding, not prediction. The natural next step is to build a lightweight MLOps layer on top of it:
+
+- **Model persistence** — save fitted models to disk so they aren't refit on every dashboard load
+- **Retraining pipeline** — automatically refit after each daily sync as new data arrives
+- **Experiment tracking** — log parameters, feature sets, R², and MAE per run so changes are traceable
+- **Temporal train/test split** — evaluate on held-out recent data for honest generalization estimates
+
+---
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
