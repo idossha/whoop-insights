@@ -202,6 +202,10 @@ class WhoopAuth:
     def is_authenticated(self) -> bool:
         return bool(self.access_token and self.refresh_token)
 
+    def is_session_valid(self) -> bool:
+        """Returns True if we have tokens AND the access token is not expired."""
+        return self.is_authenticated() and not self.is_token_expired()
+
     def clear_tokens(self):
         self.access_token = None
         self.refresh_token = None

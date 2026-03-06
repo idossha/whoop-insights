@@ -49,9 +49,12 @@ def main():
     try:
         if args.command == "auth":
             if sync.auth.load_tokens() and sync.auth.is_authenticated():
-                print("Already authenticated. Checking if tokens are valid...")
+                if not sync.auth.is_token_expired():
+                    print("Already authenticated with a valid token. No action needed.")
+                    return
+                print("Token is expired. Refreshing...")
                 if sync.auth.refresh_access_token():
-                    print("Tokens are valid and have been refreshed.")
+                    print("Token refreshed successfully.")
                     return
 
             print("Starting authentication flow...")
@@ -102,20 +105,10 @@ def main():
                 print("  Run: docker exec whoop-dashboard python main.py auth")
 
         elif args.command == "sync":
-            if not sync.auth.load_tokens():
-                print("No tokens found. Run authentication first:")
-                print("  docker exec whoop-dashboard python main.py auth")
-                sys.exit(1)
-
-            if not sync.auth.is_authenticated():
-                print("No valid tokens. Run authentication first:")
-                print("  docker exec whoop-dashboard python main.py auth")
-                sys.exit(1)
-
             print("Authenticating...")
             if not sync.authenticate():
-                print("Authentication failed. Token may be expired or revoked.")
-                print("Run: docker exec whoop-dashboard python main.py reauth")
+                print("No valid tokens or authentication failed.")
+                print("Run: docker exec whoop-dashboard python main.py auth")
                 sys.exit(1)
 
             start = None

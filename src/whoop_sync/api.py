@@ -58,46 +58,32 @@ class WhoopAPI:
     def get_body_measurement(self) -> dict:
         return self._get("/developer/v2/user/measurement/body")
 
-    def get_cycles(
-        self, start: datetime = None, end: datetime = None
+    def _fetch_range(
+        self, endpoint: str, start: datetime = None, end: datetime = None
     ) -> Generator[List[Dict], None, None]:
         params = {}
         if start:
             params["start"] = start.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         if end:
             params["end"] = end.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+        yield from self._paginate(endpoint, params)
 
-        yield from self._paginate("/developer/v2/cycle", params)
+    def get_cycles(
+        self, start: datetime = None, end: datetime = None
+    ) -> Generator[List[Dict], None, None]:
+        yield from self._fetch_range("/developer/v2/cycle", start, end)
 
     def get_recoveries(
         self, start: datetime = None, end: datetime = None
     ) -> Generator[List[Dict], None, None]:
-        params = {}
-        if start:
-            params["start"] = start.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        if end:
-            params["end"] = end.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
-        yield from self._paginate("/developer/v2/recovery", params)
+        yield from self._fetch_range("/developer/v2/recovery", start, end)
 
     def get_sleeps(
         self, start: datetime = None, end: datetime = None
     ) -> Generator[List[Dict], None, None]:
-        params = {}
-        if start:
-            params["start"] = start.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        if end:
-            params["end"] = end.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
-        yield from self._paginate("/developer/v2/activity/sleep", params)
+        yield from self._fetch_range("/developer/v2/activity/sleep", start, end)
 
     def get_workouts(
         self, start: datetime = None, end: datetime = None
     ) -> Generator[List[Dict], None, None]:
-        params = {}
-        if start:
-            params["start"] = start.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-        if end:
-            params["end"] = end.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-
-        yield from self._paginate("/developer/v2/activity/workout", params)
+        yield from self._fetch_range("/developer/v2/activity/workout", start, end)

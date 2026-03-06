@@ -291,6 +291,53 @@ tailscale funnel --https=443 off
 
 ---
 
+## Sync Schedule
+
+Data is synced automatically once per day via a cron job inside the container.
+
+### When does it run?
+
+**Daily at 11:00 AM** in whatever timezone `TZ` is set to (default UTC).
+
+### How to change the schedule
+
+Edit your `.env` file:
+
+```env
+SYNC_HOUR=6           # hour to run (0–23)
+SYNC_MINUTE=30        # minute to run (0–59)
+TZ=America/New_York   # timezone for that hour
+```
+
+Then restart the container to apply:
+
+```bash
+docker compose restart
+```
+
+On startup, `entrypoint.sh` reads those variables and writes a fresh cron job at `/etc/cron.d/whoop-cron`. That file is what the system cron daemon actually executes — you never need to edit it directly.
+
+### Running a sync manually
+
+```bash
+make docker-sync        # incremental (only new data)
+make docker-sync-full   # full historical sync
+```
+
+### Local (non-Docker) schedule
+
+If you're running without Docker, add `auto_sync.sh` to your user crontab:
+
+```bash
+crontab -e
+# add a line like:
+0 11 * * * /path/to/whoop_insights/auto_sync.sh >> /tmp/whoop-sync.log 2>&1
+```
+
+Edit the `0 11` part to change the time (standard cron syntax: `MINUTE HOUR`).
+
+---
+
 ## Troubleshooting
 
 ### "no matching manifest for linux/arm/v8"

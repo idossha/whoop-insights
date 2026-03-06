@@ -220,7 +220,8 @@ class Database:
     def get_latest_recovery_date(self) -> Optional[str]:
         conn = self._get_conn()
         row = conn.execute("""
-            SELECT MAX(r.updated_at) FROM recoveries r
+            SELECT MAX(c.start) FROM recoveries r
+            JOIN cycles c ON r.cycle_id = c.id
         """).fetchone()
         return row[0] if row and row[0] else None
 

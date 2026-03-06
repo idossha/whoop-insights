@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Callable, Generator, List, Dict
 
 from .auth import WhoopAuth
 from .api import WhoopAPI
@@ -38,73 +38,65 @@ class WhoopSync:
             f"  Height: {measurement.get('height_meter')}m, Weight: {measurement.get('weight_kilogram')}kg"
         )
 
-    def sync_cycles(
-        self, start: datetime = None, end: datetime = None, full_sync: bool = False
+    def _sync_entity(
+        self,
+        label: str,
+        get_latest_date: Callable[[], Optional[str]],
+        fetch: Callable[[Optional[datetime], Optional[datetime]], Generator[List[Dict], None, None]],
+        upsert: Callable[[dict], None],
+        start: datetime = None,
+        end: datetime = None,
+        full_sync: bool = False,
     ):
         if not full_sync and start is None:
-            latest = self.db.get_latest_cycle_date()
+            latest = get_latest_date()
             if latest:
                 start = datetime.fromisoformat(latest.replace("Z", "+00:00"))
                 start = start - timedelta(days=1)
 
-        print(f"Syncing cycles from {start or 'beginning'}...")
+        print(f"Syncing {label} from {start or 'beginning'}...")
         count = 0
-        for records in self.api.get_cycles(start=start, end=end):
-            for cycle in records:
-                self.db.upsert_cycle(cycle)
+        for records in fetch(start=start, end=end):
+            for record in records:
+                upsert(record)
                 count += 1
-        print(f"  Synced {count} cycles")
+        print(f"  Synced {count} {label}")
 
-    def sync_recoveries(
-        self, start: datetime = None, end: datetime = None, full_sync: bool = False
-    ):
-        if not full_sync and start is None:
-            latest = self.db.get_latest_recovery_date()
-            if latest:
-                start = datetime.fromisoformat(latest.replace("Z", "+00:00"))
-                start = start - timedelta(days=1)
+    def sync_cycles(self, start: datetime = None, end: datetime = None, full_sync: bool = False):
+        self._sync_entity(
+            "cycles",
+            self.db.get_latest_cycle_date,
+            self.api.get_cycles,
+            self.db.upsert_cycle,
+            start=start, end=end, full_sync=full_sync,
+        )
 
-        print(f"Syncing recoveries from {start or 'beginning'}...")
-        count = 0
-        for records in self.api.get_recoveries(start=start, end=end):
-            for recovery in records:
-                self.db.upsert_recovery(recovery)
-                count += 1
-        print(f"  Synced {count} recoveries")
+    def sync_recoveries(self, start: datetime = None, end: datetime = None, full_sync: bool = False):
+        self._sync_entity(
+            "recoveries",
+            self.db.get_latest_recovery_date,
+            self.api.get_recoveries,
+            self.db.upsert_recovery,
+            start=start, end=end, full_sync=full_sync,
+        )
 
-    def sync_sleeps(
-        self, start: datetime = None, end: datetime = None, full_sync: bool = False
-    ):
-        if not full_sync and start is None:
-            latest = self.db.get_latest_sleep_date()
-            if latest:
-                start = datetime.fromisoformat(latest.replace("Z", "+00:00"))
-                start = start - timedelta(days=1)
+    def sync_sleeps(self, start: datetime = None, end: datetime = None, full_sync: bool = False):
+        self._sync_entity(
+            "sleeps",
+            self.db.get_latest_sleep_date,
+            self.api.get_sleeps,
+            self.db.upsert_sleep,
+            start=start, end=end, full_sync=full_sync,
+        )
 
-        print(f"Syncing sleeps from {start or 'beginning'}...")
-        count = 0
-        for records in self.api.get_sleeps(start=start, end=end):
-            for sleep in records:
-                self.db.upsert_sleep(sleep)
-                count += 1
-        print(f"  Synced {count} sleeps")
-
-    def sync_workouts(
-        self, start: datetime = None, end: datetime = None, full_sync: bool = False
-    ):
-        if not full_sync and start is None:
-            latest = self.db.get_latest_workout_date()
-            if latest:
-                start = datetime.fromisoformat(latest.replace("Z", "+00:00"))
-                start = start - timedelta(days=1)
-
-        print(f"Syncing workouts from {start or 'beginning'}...")
-        count = 0
-        for records in self.api.get_workouts(start=start, end=end):
-            for workout in records:
-                self.db.upsert_workout(workout)
-                count += 1
-        print(f"  Synced {count} workouts")
+    def sync_workouts(self, start: datetime = None, end: datetime = None, full_sync: bool = False):
+        self._sync_entity(
+            "workouts",
+            self.db.get_latest_workout_date,
+            self.api.get_workouts,
+            self.db.upsert_workout,
+            start=start, end=end, full_sync=full_sync,
+        )
 
     def sync_all(
         self, full_sync: bool = False, start: datetime = None, end: datetime = None

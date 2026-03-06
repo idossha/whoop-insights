@@ -22,7 +22,6 @@ cat > /etc/cron.d/whoop-cron <<CRON_EOF
 ${SYNC_MINUTE} ${SYNC_HOUR} * * * root cd /app && set -a && . /app/.env.cron && set +a && PYTHONPATH=/app python main.py sync >> /proc/1/fd/1 2>> /proc/1/fd/2
 CRON_EOF
 chmod 0644 /etc/cron.d/whoop-cron
-crontab /etc/cron.d/whoop-cron
 
 # Start cron daemon
 cron
