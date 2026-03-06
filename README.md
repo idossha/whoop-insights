@@ -2,7 +2,7 @@
 
 Automated data pipeline, inferential statistical modeling, and interactive dashboard for personal WHOOP wearable data.
 
-> **Note:** Despite the regression outputs, this is not a predictive model — it is an inferential one. The goal is to understand which physiological variables are most associated with recovery and HRV, not to forecast future values. Coefficients are interpreted for insight, not deployed for prediction.
+> **Note:** Despite the regression outputs, this is not a predictive model - it is an inferential one. The goal is to understand which physiological variables are most associated with recovery and HRV, not to forecast future values. Coefficients are interpreted for insight, not deployed for prediction.
 
 example: https://ido-pi.tail9eb77e.ts.net/
 
