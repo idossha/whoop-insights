@@ -2,6 +2,8 @@
 
 Automated data pipeline, predictive modeling, and interactive dashboard for personal WHOOP wearable data.
 
+example: https://ido-pi.tail9eb77e.ts.net/
+
 
 ![mlr showing predicated and actual recoveries over time](docs/recovery-timeline.png)
 
