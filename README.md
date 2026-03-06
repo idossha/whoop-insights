@@ -17,7 +17,7 @@ WHOOP API (v2) --> OAuth 2.0 Sync Engine --> SQLite3 --> Streamlit Dashboard
 
 The platform ingests physiological data from the WHOOP REST API through an OAuth 2.0-authenticated sync engine. Records are upserted into a normalized SQLite database (6 tables, indexed queries). A Streamlit dashboard reads directly from SQLite to render interactive Plotly visualizations and regression model outputs across 7 analytical tabs.
 
-Deployed as a Docker container on a Raspberry Pi home cluster, with Watchtower handling automated image updates and cron managing the daily sync schedule.
+## Hardware:
 
 ![home server hosting the container and serving the site](docs/home-server.jpeg)
 *Two-node Raspberry Pi cluster connected to a home router via switch, with SSD storage. The dashboard container is kept up-to-date automatically via Watchtower and syncs data daily through cron. The site is exposed publicly and continuously over HTTPS using Tailscale Funnel.
