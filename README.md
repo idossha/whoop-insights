@@ -20,6 +20,8 @@ The platform ingests physiological data from the WHOOP REST API through an OAuth
 Deployed as a Docker container on a Raspberry Pi home cluster, with Watchtower handling automated image updates and cron managing the daily sync schedule.
 
 ![home server hosting the container and serving the site](docs/home-server.jpeg)
+*Two-node Raspberry Pi cluster connected to a home router via switch, with SSD storage. The dashboard container is kept up-to-date automatically via Watchtower and syncs data daily through cron. The site is exposed publicly and continuously over HTTPS using Tailscale Funnel.
+
 
 ---
 
