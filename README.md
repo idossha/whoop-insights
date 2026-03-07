@@ -11,6 +11,19 @@ example: https://ido-pi.tail9eb77e.ts.net/
 
 ---
 
+## Table of Contents
+
+- [To Be Added](#to-be-added)
+- [Architecture](#architecture)
+- [Hardware](#hardware)
+- [Tech Stack](#tech-stack)
+- [Dashboard](#dashboard)
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [License](#license)
+
+---
+
 ## To Be Added
 
 How can be improved? So far, the modeling layer is intentionally inferential — the goal is understanding, not prediction, however, the natural next step is to build a lightweight MLOps layer on top of it
