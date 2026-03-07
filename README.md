@@ -1,6 +1,6 @@
 # WHOOP Insights
 
-Automated data pipeline, inferential statistical modeling, and interactive dashboard for personal WHOOP wearable data.
+What is it? An automated data pipeline, inferential statistical modeling, and interactive dashboard for personal WHOOP wearable data.
 
 > **Note:** Despite the regression outputs, this is not a predictive model - it is an inferential one. The goal is to understand which physiological variables are most associated with recovery and HRV, not to forecast future values. Coefficients are interpreted for insight, not deployed for prediction.
 
@@ -11,7 +11,20 @@ example: https://ido-pi.tail9eb77e.ts.net/
 
 ---
 
+## To Be Added
+
+How can be improved? So far, the modeling layer is intentionally inferential — the goal is understanding, not prediction, however, the natural next step is to build a lightweight MLOps layer on top of it
+
+- **Temporal train/test split** — evaluate on held-out recent data for honest generalization estimates
+- **Model persistence** — save fitted models to disk so they aren't refit on every dashboard load
+- **Experiment tracking** — log parameters, feature sets, R², and MAE per run so changes are traceable
+
+
+---
+
 ## Architecture
+
+How is it built?
 
 ```
 WHOOP API (v2) --> OAuth 2.0 Sync Engine --> SQLite3 --> Streamlit Dashboard
@@ -45,16 +58,6 @@ The platform ingests physiological data from the WHOOP REST API through an OAuth
 | Scheduling | Cron | Automated daily data sync pipeline |
 | CI/CD | Watchtower | Automated container image updates |
 
----
-
-## Features
-
-- **Automated data pipeline** -- incremental sync queries the database for the latest record and fetches only new data; supports full historical re-sync and selective endpoint targeting
-- **OAuth 2.0 authentication** -- complete authorization code flow with embedded callback server, automatic token refresh with exponential backoff, and persistent token storage
-- **7-tab analytics dashboard** -- recovery/strain trends, sleep stage breakdowns, heart rate time series, workout distribution, correlation analysis, and two regression model tabs
-- **Predictive modeling** -- Ridge Regression predicting Recovery Score (6 features) and HRV (up to 11 features) with standardized coefficients and timeline visualization of predicted vs actual values
-- **Normalized database** -- 6 tables with indexed high-query columns, upsert operations for idempotent syncs, singleton constraints
-- **Production deployment** -- Dockerized on Raspberry Pi cluster, Watchtower for rolling updates, structured logging with rotation
 
 ---
 
@@ -124,17 +127,6 @@ whoop_insights/
 |   |-- coefficients.png
 |   |-- actual_vs_predicted.png
 ```
-
----
-
-## To Be Added
-
-The current modeling layer is intentionally inferential — the goal is understanding, not prediction. The natural next step is to build a lightweight MLOps layer on top of it:
-
-- **Model persistence** — save fitted models to disk so they aren't refit on every dashboard load
-- **Retraining pipeline** — automatically refit after each daily sync as new data arrives
-- **Experiment tracking** — log parameters, feature sets, R², and MAE per run so changes are traceable
-- **Temporal train/test split** — evaluate on held-out recent data for honest generalization estimates
 
 ---
 
